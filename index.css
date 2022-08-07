@@ -1,0 +1,306 @@
+* {
+  margin: 0px;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* TRACK INFO */
+
+#track-info {
+  z-index: -1;
+  position: absolute;
+  overflow: hidden;
+  top: 0px;
+  bottom: 0px;
+  margin: auto;
+}
+
+.span-for-track-info {
+  display: flex;
+  position: absolute;
+  opacity: 0.5;
+  white-space: nowrap;
+}
+
+.span-for-track-info span {
+  font-family: 'Times New Roman', Times, serif;
+  font-weight: bolder;
+  /* fallback color when webkit is not supported */
+  color: black;
+  /* this will override color property if webkit is supported */
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke-width: 2px;
+  -webkit-text-stroke-color: white;
+}
+
+.span-for-track-info img {
+  filter: grayscale(1) invert(1);
+}
+
+/* MAIN CONTENT */
+#main {
+  z-index: 5;
+  display: flex;
+  position: absolute;
+  width: 330px;
+  height: 330px;
+  align-items: center;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity 1s linear;
+  left: 0px;
+  right: 0px;
+  top: 0px;
+  bottom: 0px;
+  margin: auto;
+}
+
+#disk {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  border-radius: 100%;
+  background-color: #000000;
+  width: 330px;
+  height: 330px;
+}
+
+.disk-animation {
+  animation: disk-rotate 6s linear 8s infinite;
+}
+
+#disk-center {
+  position: absolute;
+  top: 115px;
+  left: 115px;
+  border-radius: 100%;
+  background-color: red;
+  width: 100px;
+  height: 100px;
+  z-index: -1;
+}
+
+#disk svg {
+  width: 270px;
+  height: 270px;
+  position: absolute;
+  top: 42px;
+  left: 20px;
+}
+
+#signature {
+  transform: translate(-156px, -211px);
+  stroke-dasharray: 1422;
+  stroke-dashoffset: 1422;
+  transition: stroke-dashoffset 4s linear 1s;
+}
+
+#bass-effect, #treble-effect {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  border-radius: 100%;
+  width: 330px;
+  height: 330px;
+}
+
+#bass-effect {
+  background-color: aqua;
+}
+
+#treble-effect {
+  background-color: red;
+}
+
+@keyframes disk-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+#main .bar {
+  border-radius: 50px;
+  height: 5%;
+  width: 0px;
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* CELLS */
+#app {
+  display: grid;
+  height: 100%;
+  background-size: cover;
+  color: white;
+  position: relative;
+}
+
+.cell {
+  z-index: 3;
+}
+
+.cell-touch {
+  animation: cellTouch 0.5s linear 0s;
+}
+
+@keyframes cellTouch {
+  0% {
+    background-color: rgba(255, 255, 255, 0.4);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+/* DOTS */
+.dot {
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(3px);
+}
+
+#app .dot {
+  transition: opacity 1s, transform 24s linear;
+  z-index: 1;
+  position: absolute;
+}
+
+/* GRADIENT BACKGROUND */
+body {
+  background-image: url(https://cdn.wallpapersafari.com/31/36/94W1cA.jpg);
+  background-size: cover;
+}
+
+#mask {
+  z-index: -1;
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  height: 100%;
+  opacity: 0.2;
+  animation: gradient 8s ease-in-out 0s infinite alternate;
+}
+
+@keyframes gradient {
+  0% {
+    background-color: black;
+  }
+  12.5% {
+    background-color: white;
+  }
+  25% {
+    background-color: red;
+  }
+  37.5% {
+    background-color: green;
+  }
+  50% {
+    background-color: blue;
+  }
+  62.5% {
+    background-color: aqua;
+  }
+  75% {
+    background-color: magenta;
+  }
+  87.5% {
+    background-color: yellow;
+  }
+  100% {
+    background-color: black;
+  }
+}
+
+/* LOADING SCREEN */
+#loading {
+  z-index: 4;
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  transition: opacity 1s;
+}
+
+#loading * {
+  color: #000000;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+#loading #prevent-highlight {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  height: 100%;
+}
+
+#start-alert {
+  position: absolute;
+  top: 80vh;
+  width: 100%;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+
+#start-alert div {
+  text-decoration: underline;
+  text-align: center;
+}
+
+#logo-container {
+  position: relative;
+  width: 377px;
+  display: inline-block;
+  transform: scale(1.5);
+}
+
+#n-container{
+  position: absolute;
+  top: 64px;
+  left: 77px;
+  font-size: 4rem;
+}
+
+#uyen-container {
+  position: absolute;
+  top: 64px;
+  left: 190px;
+  font-size: 4rem;
+}
+
+#randy-container {
+  font-size: 18px;
+  position: absolute;
+  left: 127px;
+  top: 91px;
+  font-family: monospace;
+  background: white;
+  padding: 0px 10px;
+  padding-bottom: 1px;
+}
+
+#logo-container svg {
+  width: 200px;
+  height: 200px;
+  fill: white;
+  stroke: black;
+  stroke-width: 2;
+  stroke-dasharray: 0 1000;
+  animation: logo-rotate 1.5s 2s linear infinite alternate;
+}
+
+@keyframes logo-rotate {
+  100% {
+    stroke-dasharray: 650 1000;
+  }
+}
