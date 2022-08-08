@@ -39,6 +39,7 @@ const VISUALIZATION_UPDATE_TIME = 20; // 50fps
 const TRACK_INFO_HEIGHT = 0.7; // relative size compared to main content
 const TRACK_INFO_TRAVEL_TIME = 40000;
 const TIME_BETWEEN_TRACK_INFO_SPAN = 0;
+const BACKGROUND_COLORS = ['fdac53', 'f5df4d', 'a0daa9', '9bb7d4', '0072b5', '926aa6', 'e0b589', '939597', 'ffc0cb'];
 
 // GLOBAL VARS
 let rows;
@@ -50,6 +51,7 @@ const tracksBuffer = [];
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let currentTrackIndex = 0;
 const visualizationBars = document.getElementsByClassName('bar');
+let currentColorIndex = 0;
 
 // UTILS
 function square(number) {
@@ -159,12 +161,20 @@ function createDot(dotSize, top, left) {
   return dot;
 }
 
+function updateBackgroundColor() {
+  const body = document.getElementsByTagName('body')[0];
+  body.style.backgroundColor = `#${BACKGROUND_COLORS[currentColorIndex]}`;
+  currentColorIndex = (currentColorIndex + 1) % BACKGROUND_COLORS.length;
+}
+
 function startDotGame() {
   setInterval(() => {
     // skip generating when the tab is out of focus
     if (!document.hasFocus()) {
       return;
     }
+    // update background color after the dot is added completely
+    sleep(1000).then(() => updateBackgroundColor());
     // generate dot
     const appWidth = AppContainer.offsetWidth;
     const appHeight = AppContainer.offsetHeight;
