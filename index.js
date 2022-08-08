@@ -299,7 +299,11 @@ function createTrackInfo({ name, artist }) {
     span.style.left = `${trackInfoWidth - 2 * trackInfoHeight}px`;
     span.style.transition = `transform ${spanTransitionTime}ms linear, opacity 1s`;
     makeAnimation(span, 'to-make-a-transition-for-left-property');
-    span.style.transform = `translateX(${-(trackInfoWidth - 2 * trackInfoHeight + spanWidth)}px)`;
+    span.style.transform = `translateX(${-(
+      trackInfoWidth
+      - 2 * trackInfoHeight
+      + spanWidth
+    )}px)`;
   }
   let intervalID;
   function startTrackInfo() {
@@ -319,13 +323,22 @@ function createTrackInfo({ name, artist }) {
   function stopTrackInfo(endOfTrack = false) {
     clearInterval(intervalID);
     // remove old spans
-    setTimeout(() => clearOldSpans(trackInfoContainer), (endOfTrack ? 1000 : 0));
+    setTimeout(() => clearOldSpans(trackInfoContainer), endOfTrack ? 1000 : 0);
     if (!endOfTrack) {
       return;
     }
     // remove listeners
     window.onfocus = undefined;
     window.onblur = undefined;
+    // faded animation for old spans
+    const trackInfoSpans = document.getElementsByClassName(
+      'span-for-track-info',
+    );
+    for (let i = 0; i < trackInfoSpans.length; i++) {
+      const span = trackInfoSpans[i];
+      makeAnimation(span, 'to-make-a-transition-for-opacity-property');
+      span.style.opacity = '0';
+    }
   }
   // restart track info when the tab is focused
   window.onfocus = () => {
@@ -338,23 +351,7 @@ function createTrackInfo({ name, artist }) {
   return stopTrackInfo;
 }
 
-function startMusic() {
-  if (!tracksBuffer.length) {
-    return;
-  }
-  const stopTrackInfoHandler = createTrackInfo(tracksBuffer[currentTrackIndex]);
-  const analyser = audioCtx.createAnalyser();
-  analyser.minDecibels = -90;
-  analyser.maxDecibels = -10;
-  analyser.smoothingTimeConstant = 0.85;
-  const source = audioCtx.createBufferSource();
-  const audioBuffer = tracksBuffer[currentTrackIndex].buffer;
-  source.buffer = audioBuffer;
-  source.connect(analyser);
-  analyser.connect(audioCtx.destination);
-  source.start();
-  onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true);
-  analyser.fftSize = FFT_SIZE;
+function startMusicVisualization(analyser) {
   const bufferLength = analyser.frequencyBinCount;
   const dataArray = new Uint8Array(bufferLength);
   const bassCircle = document.getElementById('bass-effect');
@@ -373,11 +370,11 @@ function startMusic() {
       Math.min(1, dBTreble / 140) * 1.25
     })`;
   };
-  const intervalIDforVisualization = setInterval(
+  const musicVisualizationIntervalID = setInterval(
     updateVisualization,
     VISUALIZATION_UPDATE_TIME,
   );
-  source.onended = async () => {
+  return () => {
     // reset circles and bars
     bassCircle.style.transform = 'scale(1)';
     trebleCircle.style.transform = 'scale(1)';
@@ -386,30 +383,40 @@ function startMusic() {
       bar.style.width = '0px';
     }
     // stop visualization
-    clearInterval(intervalIDforVisualization);
-    // finish track info
-    stopTrackInfoHandler(true);
-    const trackInfoSpans = document.getElementsByClassName(
-      'span-for-track-info',
-    );
-    for (let i = 0; i < trackInfoSpans.length; i++) {
-      const span = trackInfoSpans[i];
-      makeAnimation(span, 'to-make-a-transition-for-opacity-property');
-      span.style.opacity = '0';
-    }
-    // play next track
-    currentTrackIndex = (currentTrackIndex + 1) % tracksBuffer.length;
-    await sleep(1000);
-    startMusic();
+    clearInterval(musicVisualizationIntervalID);
   };
 }
 
-// INIT FUNCTION
-async function init() {
-  const startTime = getTime();
-  // create grid system
-  const appWidth = AppContainer.offsetWidth;
-  const appHeight = AppContainer.offsetHeight;
+function startMusic() {
+  if (!tracksBuffer.length) {
+    return;
+  }
+  const stopTrackInfoHandler = createTrackInfo(tracksBuffer[currentTrackIndex]);
+  const analyser = audioCtx.createAnalyser();
+  analyser.minDecibels = -90;
+  analyser.maxDecibels = -10;
+  analyser.smoothingTimeConstant = 0.85;
+  const source = audioCtx.createBufferSource();
+  const audioBuffer = tracksBuffer[currentTrackIndex].buffer;
+  source.buffer = audioBuffer;
+  source.connect(analyser);
+  analyser.connect(audioCtx.destination);
+  source.start();
+  // animation at the beginning of the song
+  onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true);
+  analyser.fftSize = FFT_SIZE;
+  const stopVisualizationHandler = startMusicVisualization(analyser);
+  source.onended = () => {
+    stopVisualizationHandler();
+    stopTrackInfoHandler(true);
+    // move to next track
+    currentTrackIndex = (currentTrackIndex + 1) % tracksBuffer.length;
+    // use .then instead of async/await to avoid infinite stack size increase
+    sleep(1000).then(() => startMusic());
+  };
+}
+
+function createGridSystem(appWidth, appHeight) {
   cols = isMobileDevice() ? CELLS_PER_ROW_MOBILE : CELLS_PER_ROW;
   const cellSize = appWidth / cols;
   rows = Math.round(appHeight / cellSize);
@@ -429,7 +436,53 @@ async function init() {
     cells.push(cellsInRow);
     isCellExisted.push(boolArray);
   }
-  // load all the tracks
+}
+
+function showMainPanel(mainContainerSizeAfterScaling) {
+  // styling for the main panel according to the screen size
+  const mainContainer = document.getElementById('main');
+  const mainContainerSize = mainContainer.offsetWidth;
+  mainContainer.style.transform = `scale(${
+    mainContainerSizeAfterScaling / mainContainerSize
+  })`;
+  // show the main panel
+  mainContainer.style.opacity = '1';
+  // show signature and apply animations for the main panel
+  const signature = document.getElementById('signature');
+  signature.style.strokeDashoffset = '0';
+  const signatureContainer = document.getElementById('signature-container');
+  signatureContainer.style.transform = `scale(${isMobileDevice() ? 3 : 6})`;
+  setTimeout(() => {
+    signatureContainer.style.transition = 'transform 3s ease-in-out';
+    signatureContainer.style.transform = 'scale(1)';
+  }, 5000);
+  const diskContainer = document.getElementById('disk');
+  diskContainer.classList.add('disk-animation');
+}
+
+function prepareTrackInfoLayout(
+  appWidth,
+  appHeight,
+  mainContainerSizeAfterScaling,
+) {
+  // track info layout
+  const trackInfoContainer = document.getElementById('track-info');
+  const trackInfoHeight = mainContainerSizeAfterScaling * TRACK_INFO_HEIGHT;
+  trackInfoContainer.style.height = `${trackInfoHeight}px`;
+  const trackInfoWidth = Math.sqrt(square(appHeight) + square(appWidth)) + 4 * trackInfoHeight;
+  trackInfoContainer.style.width = `${trackInfoWidth}px`;
+  trackInfoContainer.style.left = `calc((100vw - ${trackInfoWidth}px) / 2)`;
+  // rotate track info according to the screen size
+  const alpha = Math.atan((appHeight - trackInfoHeight) / appWidth);
+  trackInfoContainer.style.transform = `rotate(${-alpha}rad)`;
+}
+
+// INIT FUNCTION
+async function init() {
+  const appWidth = AppContainer.offsetWidth;
+  const appHeight = AppContainer.offsetHeight;
+  const startTime = getTime();
+  createGridSystem(appWidth, appHeight);
   await loadTracks();
   // wait more if loading time is way too fast
   const currentTime = getTime();
@@ -439,46 +492,18 @@ async function init() {
   // show alert
   const alertText = document.getElementById('start-alert');
   alertText.style.opacity = '1';
-  // remove loading screen after the user clicks
   const loadingScreen = document.getElementById('loading');
   addUniversalSensitiveClickListener(loadingScreen, async () => {
-    loadingScreen.style.opacity = '0';
-    await sleep(LOADING_FADE_OUT_TIME);
-    loadingScreen.remove();
-    // styling for the main panel according to the screen size
-    const mainContainer = document.getElementById('main');
-    const mainContainerSize = mainContainer.offsetWidth;
     const mainContainerSizeAfterScaling = (appHeight
         * (isMobileDevice() ? MAIN_CONTENT_SIZE_MOBILE : MAIN_CONTENT_SIZE))
       / 100;
-    mainContainer.style.transform = `scale(${
-      mainContainerSizeAfterScaling / mainContainerSize
-    })`;
-    // show the main panel
-    mainContainer.style.opacity = '1';
-    // show signature and apply animations for the main panel
-    const signature = document.getElementById('signature');
-    signature.style.strokeDashoffset = '0';
-    const signatureContainer = document.getElementById('signature-container');
-    signatureContainer.style.transform = `scale(${isMobileDevice() ? 3 : 6})`;
-    setTimeout(() => {
-      signatureContainer.style.transition = 'transform 3s ease-in-out';
-      signatureContainer.style.transform = 'scale(1)';
-    }, 5000);
-    const diskContainer = document.getElementById('disk');
-    diskContainer.classList.add('disk-animation');
-    // start dot game
+    loadingScreen.style.opacity = '0';
+    await sleep(LOADING_FADE_OUT_TIME);
+    // remove loading screen after the user clicks
+    loadingScreen.remove();
+    showMainPanel(mainContainerSizeAfterScaling);
     startDotGame();
-    // track info layout
-    const trackInfoContainer = document.getElementById('track-info');
-    const trackInfoHeight = mainContainerSizeAfterScaling * TRACK_INFO_HEIGHT;
-    trackInfoContainer.style.height = `${trackInfoHeight}px`;
-    const trackInfoWidth = Math.sqrt(square(appHeight) + square(appWidth)) + 4 * trackInfoHeight;
-    trackInfoContainer.style.width = `${trackInfoWidth}px`;
-    trackInfoContainer.style.left = `calc((100vw - ${trackInfoWidth}px) / 2)`;
-    // rotate track info according to the screen size
-    const alpha = Math.atan((appHeight - trackInfoHeight) / appWidth);
-    trackInfoContainer.style.transform = `rotate(${-alpha}rad)`;
+    prepareTrackInfoLayout(appWidth, appHeight, mainContainerSizeAfterScaling);
     // start music
     await sleep(8000);
     startMusic();
