@@ -13,7 +13,7 @@ body {
 /* BACKGROUND */
 body {
   background-color: #ffc0cb;
-  transition: background-color 1s;
+  transition: background-color 1s linear;
 }
 
 /* TRACK INFO */
@@ -173,7 +173,7 @@ body {
 }
 
 #app .dot {
-  transition: opacity 1s, transform 24s linear;
+  transition: opacity 1s linear, transform 24s linear;
   z-index: 1;
   position: absolute;
 }
