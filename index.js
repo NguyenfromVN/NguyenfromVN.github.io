@@ -39,7 +39,23 @@ const VISUALIZATION_UPDATE_TIME = 20; // 50fps
 const TRACK_INFO_HEIGHT = 0.7; // relative size compared to main content
 const TRACK_INFO_TRAVEL_TIME = 40000;
 const TIME_BETWEEN_TRACK_INFO_SPAN = 0;
-const BACKGROUND_COLORS = ['fdac53', 'f5df4d', 'a0daa9', '9bb7d4', '0072b5', '926aa6', 'e0b589', '939597', 'ffc0cb'];
+const BACKGROUND_COLORS = [
+  'af8169',
+  '7a3f39',
+  'd3a29b',
+  'd2c9ce',
+  '72908e',
+  'c67a45',
+  'cabcaf',
+  'e5e1de',
+  '989590',
+  'bcbb8e',
+  'e7c182',
+  '737551',
+  '5d5e60',
+  'cbd2da',
+  '88b0d7',
+];
 
 // GLOBAL VARS
 let rows;
