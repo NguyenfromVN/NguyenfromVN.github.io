@@ -39,23 +39,7 @@ const VISUALIZATION_UPDATE_TIME = 20; // 50fps
 const TRACK_INFO_HEIGHT = 0.7; // relative size compared to main content
 const TRACK_INFO_TRAVEL_TIME = 40000;
 const TIME_BETWEEN_TRACK_INFO_SPAN = 0;
-const BACKGROUND_COLORS = [
-  'af8169',
-  '7a3f39',
-  'd3a29b',
-  'd2c9ce',
-  '72908e',
-  'c67a45',
-  'cabcaf',
-  'e5e1de',
-  '989590',
-  'bcbb8e',
-  'e7c182',
-  '737551',
-  '5d5e60',
-  'cbd2da',
-  '88b0d7',
-];
+const TIME_BETWEEN_FLICKERING_ANIMATION = 7000;
 
 // GLOBAL VARS
 let rows;
@@ -67,7 +51,6 @@ const tracksBuffer = [];
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let currentTrackIndex = 0;
 const visualizationBars = document.getElementsByClassName('bar');
-let currentColorIndex = 0;
 
 // UTILS
 function square(number) {
@@ -177,10 +160,27 @@ function createDot(dotSize, top, left) {
   return dot;
 }
 
-function updateBackgroundColor() {
-  const body = document.getElementsByTagName('body')[0];
-  body.style.backgroundColor = `#${BACKGROUND_COLORS[currentColorIndex]}`;
-  currentColorIndex = (currentColorIndex + 1) % BACKGROUND_COLORS.length;
+function startSignatureFlickeringEffect() {
+  const signatureContainer = document.getElementById('signature-container');
+  async function makeEffect() {
+    signatureContainer.classList.remove('neon-effect');
+    await sleep(300);
+    signatureContainer.classList.add('neon-effect');
+    await sleep(100);
+    signatureContainer.classList.remove('neon-effect');
+    await sleep(100);
+    signatureContainer.classList.add('neon-effect');
+    await sleep(100);
+    signatureContainer.classList.remove('neon-effect');
+    await sleep(100);
+    signatureContainer.classList.add('neon-effect');
+    await sleep(100);
+    signatureContainer.classList.remove('neon-effect');
+    await sleep(200);
+    signatureContainer.classList.add('neon-effect');
+  }
+  makeEffect();
+  setInterval(makeEffect, TIME_BETWEEN_FLICKERING_ANIMATION);
 }
 
 function startDotGame() {
@@ -189,8 +189,6 @@ function startDotGame() {
     if (!document.hasFocus()) {
       return;
     }
-    // update background color after the dot is added completely
-    sleep(1000).then(() => updateBackgroundColor());
     // generate dot
     const appWidth = AppContainer.offsetWidth;
     const appHeight = AppContainer.offsetHeight;
@@ -432,13 +430,13 @@ function startMusic() {
   onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true);
   analyser.fftSize = FFT_SIZE;
   const stopVisualizationHandler = startMusicVisualization(analyser);
-  source.onended = () => {
+  source.onended = async () => {
     stopVisualizationHandler();
     stopTrackInfoHandler(true);
     // move to next track
     currentTrackIndex = (currentTrackIndex + 1) % tracksBuffer.length;
-    // use .then instead of async/await to avoid infinite stack size increase
-    sleep(1000).then(() => startMusic());
+    await sleep(1000);
+    startMusic();
   };
 }
 
@@ -530,9 +528,9 @@ async function init() {
     showMainPanel(mainContainerSizeAfterScaling);
     startDotGame();
     prepareTrackInfoLayout(appWidth, appHeight, mainContainerSizeAfterScaling);
-    // start music
     await sleep(8000);
     startMusic();
+    startSignatureFlickeringEffect();
   });
 }
 
