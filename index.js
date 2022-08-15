@@ -163,6 +163,7 @@ function createDot(dotSize, top, left) {
 
 function startSignatureNeonEffect() {
   const signatureContainer = document.getElementById('signature-container');
+  window.cid += 'tfolio';
   function makeEffect() {
     let delay = 0;
     function makeFlickeringEffect(delays) {
@@ -447,7 +448,7 @@ function createGridSystem(appWidth, appHeight) {
   cols = isMobileDevice() ? CELLS_PER_ROW_MOBILE : CELLS_PER_ROW;
   const cellSize = appWidth / cols;
   rows = Math.round(appHeight / cellSize);
-  window.copyright = 'rand';
+  window.cid = 'rand';
   AppContainer.style.gridTemplateColumns = createFrString(cols);
   AppContainer.style.gridTemplateRows = createFrString(rows);
   for (let i = 0; i < rows; i++) {
@@ -475,7 +476,7 @@ function showMainPanel(mainContainerSizeAfterScaling) {
   })`;
   // show the main panel
   mainContainer.style.opacity = '1';
-  window.copyright += 'y-nguye';
+  window.cid += 'y-nguye';
   // show signature and apply animations for the main panel
   const signature = document.getElementById('signature');
   signature.style.strokeDashoffset = '0';
@@ -506,7 +507,7 @@ function prepareTrackInfoLayout(
   const trackInfoWidth = Math.sqrt(square(appHeight) + square(appWidth)) + 4 * trackInfoHeight;
   trackInfoContainer.style.width = `${trackInfoWidth}px`;
   trackInfoContainer.style.left = `calc((100vw - ${trackInfoWidth}px) / 2)`;
-  window.copyright += 'n';
+  window.cid += 'n_por';
   // rotate track info according to the screen size
   const alpha = Math.atan((appHeight - trackInfoHeight) / appWidth);
   trackInfoContainer.style.transform = `rotate(${-alpha}rad)`;
