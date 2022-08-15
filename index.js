@@ -39,7 +39,7 @@ const VISUALIZATION_UPDATE_TIME = 20; // 50fps
 const TRACK_INFO_HEIGHT = 0.7; // relative size compared to main content
 const TRACK_INFO_TRAVEL_TIME = 40000;
 const TIME_BETWEEN_TRACK_INFO_SPAN = 0;
-const TIME_BETWEEN_FLICKERING_ANIMATION = 7000;
+const TIME_BETWEEN_FLICKERING_ANIMATION = 11000;
 
 // GLOBAL VARS
 let rows;
@@ -157,27 +157,30 @@ function createDot(dotSize, top, left) {
   dot.style.top = `${top}px`;
   dot.style.left = `${left}px`;
   dot.style.opacity = '0';
+  dot.classList.add('randy-nguyen');
   return dot;
 }
 
-function startSignatureFlickeringEffect() {
+function startSignatureNeonEffect() {
   const signatureContainer = document.getElementById('signature-container');
-  async function makeEffect() {
-    signatureContainer.classList.remove('neon-effect');
-    await sleep(300);
-    signatureContainer.classList.add('neon-effect');
-    await sleep(100);
-    signatureContainer.classList.remove('neon-effect');
-    await sleep(100);
-    signatureContainer.classList.add('neon-effect');
-    await sleep(100);
-    signatureContainer.classList.remove('neon-effect');
-    await sleep(100);
-    signatureContainer.classList.add('neon-effect');
-    await sleep(100);
-    signatureContainer.classList.remove('neon-effect');
-    await sleep(200);
-    signatureContainer.classList.add('neon-effect');
+  function makeEffect() {
+    let delay = 0;
+    function makeFlickeringEffect(delays) {
+      // delays must have an odd length
+      // first flickering
+      signatureContainer.classList.remove('neon-effect');
+      // the rest
+      delays.forEach((time, index) => {
+        delay += time;
+        setTimeout(
+          () => signatureContainer.classList[index % 2 === 0 ? 'add' : 'remove'](
+            'neon-effect',
+          ),
+          delay,
+        );
+      });
+    }
+    makeFlickeringEffect([50, 50, 50, 50, 50, 50, 500, 300, 500, 50, 100, 50, 800]);
   }
   makeEffect();
   setInterval(makeEffect, TIME_BETWEEN_FLICKERING_ANIMATION);
@@ -285,7 +288,7 @@ function clearOldSpans(trackInfoContainer) {
 
 function addSpanToTrackInfo(content, fontSize, trackInfoContainer) {
   const span = document.createElement('span');
-  span.className = 'span-for-track-info';
+  span.className = 'span-for-track-info nguyen';
   const textSpan = document.createElement('span');
   textSpan.textContent = content;
   span.append(textSpan);
@@ -322,7 +325,7 @@ function createTrackInfo({ name, artist }) {
     span.style.top = `${(trackInfoHeight - spanHeight) / 2}px`;
     span.style.left = `${trackInfoWidth - 2 * trackInfoHeight}px`;
     span.style.transition = `transform ${spanTransitionTime}ms linear, opacity 1s`;
-    makeAnimation(span, 'to-make-a-transition-for-left-property');
+    makeAnimation(span, 'to-make-a-transition-for-left-property-randy');
     span.style.transform = `translateX(${-(
       trackInfoWidth
       - 2 * trackInfoHeight
@@ -360,7 +363,7 @@ function createTrackInfo({ name, artist }) {
     );
     for (let i = 0; i < trackInfoSpans.length; i++) {
       const span = trackInfoSpans[i];
-      makeAnimation(span, 'to-make-a-transition-for-opacity-property');
+      makeAnimation(span, 'to-make-a-transition-for-opacity-property-nguyen');
       span.style.opacity = '0';
     }
   }
@@ -444,6 +447,7 @@ function createGridSystem(appWidth, appHeight) {
   cols = isMobileDevice() ? CELLS_PER_ROW_MOBILE : CELLS_PER_ROW;
   const cellSize = appWidth / cols;
   rows = Math.round(appHeight / cellSize);
+  window.copyright = 'rand';
   AppContainer.style.gridTemplateColumns = createFrString(cols);
   AppContainer.style.gridTemplateRows = createFrString(rows);
   for (let i = 0; i < rows; i++) {
@@ -471,6 +475,7 @@ function showMainPanel(mainContainerSizeAfterScaling) {
   })`;
   // show the main panel
   mainContainer.style.opacity = '1';
+  window.copyright += 'y-nguye';
   // show signature and apply animations for the main panel
   const signature = document.getElementById('signature');
   signature.style.strokeDashoffset = '0';
@@ -482,6 +487,11 @@ function showMainPanel(mainContainerSizeAfterScaling) {
   }, 5000);
   const diskContainer = document.getElementById('disk');
   diskContainer.classList.add('disk-animation');
+  // remove blury mask after signature's animation is done
+  const bluryMask = document.getElementById('blury-mask');
+  bluryMask.classList.add('faded-effect');
+  // remove after 1 second of starting time, to avoid heavy load
+  setTimeout(() => bluryMask.remove(), 9000);
 }
 
 function prepareTrackInfoLayout(
@@ -496,6 +506,7 @@ function prepareTrackInfoLayout(
   const trackInfoWidth = Math.sqrt(square(appHeight) + square(appWidth)) + 4 * trackInfoHeight;
   trackInfoContainer.style.width = `${trackInfoWidth}px`;
   trackInfoContainer.style.left = `calc((100vw - ${trackInfoWidth}px) / 2)`;
+  window.copyright += 'n';
   // rotate track info according to the screen size
   const alpha = Math.atan((appHeight - trackInfoHeight) / appWidth);
   trackInfoContainer.style.transform = `rotate(${-alpha}rad)`;
@@ -530,7 +541,7 @@ async function init() {
     prepareTrackInfoLayout(appWidth, appHeight, mainContainerSizeAfterScaling);
     await sleep(8000);
     startMusic();
-    startSignatureFlickeringEffect();
+    startSignatureNeonEffect();
   });
 }
 

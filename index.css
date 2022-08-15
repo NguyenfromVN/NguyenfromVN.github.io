@@ -12,10 +12,26 @@ body {
 
 /* BACKGROUND */
 body {
-  background-image: url("https://cdn.dribbble.com/users/2420234/screenshots/5612047/dehill-thesis-2-dribble.gif");
+  background-image: url("https://cdn.dribbble.com/users/2420234/screenshots/5612047/dehill-thesis-2-dribble.gif#randy");
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
+}
+
+/* BLURY MASK */
+#blury-mask {
+  z-index: -1;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.faded-effect {
+  transition: opacity 3s linear 5s;
+  opacity: 0;
 }
 
 /* TRACK INFO */
