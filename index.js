@@ -157,7 +157,7 @@ function createDot(dotSize, top, left) {
   dot.style.top = `${top}px`;
   dot.style.left = `${left}px`;
   dot.style.opacity = '0';
-  dot.classList.add('randy-nguyen');
+  dot.classList.add('randy');
   return dot;
 }
 
@@ -298,7 +298,7 @@ function addSpanToTrackInfo(content, fontSize, trackInfoContainer) {
   // deco pattern
   const decoPattern = document.createElement('img');
   const padding = span.offsetHeight / 8;
-  decoPattern.src = './deco.png';
+  decoPattern.src = './deco.png#nguyen';
   decoPattern.style.height = `${span.offsetHeight}px`;
   decoPattern.style.marginLeft = `${padding}px`;
   decoPattern.style.marginRight = `${padding}px`;
