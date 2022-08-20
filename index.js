@@ -121,6 +121,12 @@ function addUniversalSensitiveClickListener(element, handler) {
   });
 }
 
+function roundToOddNumber(value) {
+  const lower = Math.floor(value);
+  const upper = lower + 1;
+  return lower % 2 !== 0 ? lower : upper;
+}
+
 // LOGIC
 function makeCellAnimation(row, col, distance, triggeredByCode) {
   if (row < 0 || row >= rows) {
@@ -181,7 +187,9 @@ function startSignatureNeonEffect() {
         );
       });
     }
-    makeFlickeringEffect([50, 50, 50, 50, 50, 50, 500, 300, 500, 50, 100, 50, 800]);
+    makeFlickeringEffect([
+      50, 50, 50, 50, 50, 50, 500, 300, 500, 50, 100, 50, 800,
+    ]);
   }
   makeEffect();
   setInterval(makeEffect, TIME_BETWEEN_FLICKERING_ANIMATION);
@@ -216,12 +224,12 @@ function startDotGame() {
   }, TIME_BETWEEN_DOT_GENERATE);
 }
 
-function onCellTouch(row, col, triggeredByCode = false) {
+function onCellTouch(row, col, triggeredByCode = false, customDelay = PROPAGATION_DELAY) {
   makeCellAnimation(row, col, 0, triggeredByCode);
   // wave effect, similar to how bfs works
   const maxDistance = rows + cols;
   for (let distance = 1; distance <= maxDistance; distance++) {
-    const delay = PROPAGATION_DELAY * distance;
+    const delay = customDelay * distance;
     setTimeout(() => {
       // create the ring
       for (let k = 0; k < distance; k++) {
@@ -431,7 +439,7 @@ function startMusic() {
   analyser.connect(audioCtx.destination);
   source.start();
   // animation at the beginning of the song
-  onCellTouch(0, 0, true);
+  onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true, 50);
   analyser.fftSize = FFT_SIZE;
   const stopVisualizationHandler = startMusicVisualization(analyser);
   source.onended = async () => {
@@ -447,7 +455,7 @@ function startMusic() {
 function createGridSystem(appWidth, appHeight) {
   cols = isMobileDevice() ? CELLS_PER_ROW_MOBILE : CELLS_PER_ROW;
   const cellSize = appWidth / cols;
-  rows = Math.round(appHeight / cellSize);
+  rows = roundToOddNumber(appHeight / cellSize);
   window.cid = 'rand';
   AppContainer.style.gridTemplateColumns = createFrString(cols);
   AppContainer.style.gridTemplateRows = createFrString(rows);
