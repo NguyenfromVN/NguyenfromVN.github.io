@@ -431,7 +431,7 @@ function startMusic() {
   analyser.connect(audioCtx.destination);
   source.start();
   // animation at the beginning of the song
-  onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true);
+  onCellTouch(0, 0, true);
   analyser.fftSize = FFT_SIZE;
   const stopVisualizationHandler = startMusicVisualization(analyser);
   source.onended = async () => {
@@ -488,11 +488,11 @@ function showMainPanel(mainContainerSizeAfterScaling) {
   }, 5000);
   const diskContainer = document.getElementById('disk');
   diskContainer.classList.add('disk-animation');
-  // remove blury mask after signature's animation is done
-  const bluryMask = document.getElementById('blury-mask');
-  bluryMask.classList.add('faded-effect');
+  // remove mask after signature's animation is done
+  const mask = document.getElementById('mask');
+  mask.classList.add('faded-effect');
   // remove after 1 second of starting time, to avoid heavy load
-  setTimeout(() => bluryMask.remove(), 9000);
+  setTimeout(() => mask.remove(), 9000);
 }
 
 function prepareTrackInfoLayout(
