@@ -51,6 +51,7 @@ const tracksBuffer = [];
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let currentTrackIndex = 0;
 const visualizationBars = document.getElementsByClassName('bar');
+const root = document.querySelector(':root');
 
 // UTILS
 function square(number) {
@@ -224,12 +225,16 @@ function startDotGame() {
   }, TIME_BETWEEN_DOT_GENERATE);
 }
 
-function onCellTouch(row, col, triggeredByCode = false, customDelay = PROPAGATION_DELAY) {
+function onCellTouch(
+  row,
+  col,
+  triggeredByCode = false,
+) {
   makeCellAnimation(row, col, 0, triggeredByCode);
   // wave effect, similar to how bfs works
   const maxDistance = rows + cols;
   for (let distance = 1; distance <= maxDistance; distance++) {
-    const delay = customDelay * distance;
+    const delay = PROPAGATION_DELAY * distance;
     setTimeout(() => {
       // create the ring
       for (let k = 0; k < distance; k++) {
@@ -306,7 +311,7 @@ function addSpanToTrackInfo(content, fontSize, trackInfoContainer) {
   // deco pattern
   const decoPattern = document.createElement('img');
   const padding = span.offsetHeight / 8;
-  decoPattern.src = './deco.png#nguyen';
+  decoPattern.src = './images/deco.png#nguyen';
   decoPattern.style.height = `${span.offsetHeight}px`;
   decoPattern.style.marginLeft = `${padding}px`;
   decoPattern.style.marginRight = `${padding}px`;
@@ -439,7 +444,7 @@ function startMusic() {
   analyser.connect(audioCtx.destination);
   source.start();
   // animation at the beginning of the song
-  onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true, 50);
+  onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true);
   analyser.fftSize = FFT_SIZE;
   const stopVisualizationHandler = startMusicVisualization(analyser);
   source.onended = async () => {
@@ -503,6 +508,45 @@ function showMainPanel(mainContainerSizeAfterScaling) {
   setTimeout(() => mask.remove(), 9000);
 }
 
+function showMiniLogo() {
+  const scalingBigRatio = 1.5;
+  const scalingSmallRatio = 0.5;
+  const animationLength = 2;
+  // animation for name
+  const characterWidth = document.querySelector('#mini-logo .R').offsetWidth;
+  root.style.setProperty(
+    '--scalingBigWidth',
+    `${characterWidth * scalingBigRatio}px`,
+  );
+  root.style.setProperty(
+    '--scalingSmallWidth',
+    `${characterWidth * scalingSmallRatio}px`,
+  );
+  root.style.setProperty('--scalingBigRatio', `${scalingBigRatio}`);
+  root.style.setProperty('--scalingSmallRatio', `${scalingSmallRatio}`);
+  const rContainer = document.querySelector('#mini-logo .R');
+  rContainer.style.animation = `rContainerScaling ${animationLength}s ease-in-out infinite alternate`;
+  const dContainer = document.querySelector('#mini-logo .d');
+  dContainer.style.animation = `dContainerScaling ${animationLength}s ease-in-out infinite alternate`;
+  const rCharacter = document.querySelector('#mini-logo .R div');
+  rCharacter.style.animation = `rScaling ${animationLength}s ease-in-out infinite alternate`;
+  const dCharacter = document.querySelector('#mini-logo .d div');
+  dCharacter.style.animation = `dScaling ${animationLength}s ease-in-out infinite alternate`;
+  // animation for hobbies
+  const hobbiesDiv = document.querySelectorAll('#mini-logo .hobbies div');
+  for (let i = 0; i < hobbiesDiv.length; i++) {
+    hobbiesDiv[i].style.animation = `hobbiesAnimation ${
+      animationLength * hobbiesDiv.length
+    }s ${animationLength * i}s linear infinite`;
+  }
+  // show after 1s to skip weird looking first state of elements
+  const miniLogoContainer = document.getElementById('mini-logo');
+  setTimeout(() => {
+    miniLogoContainer.style.transition = 'opacity 1s';
+    miniLogoContainer.style.opacity = '1';
+  }, 1000);
+}
+
 function prepareTrackInfoLayout(
   appWidth,
   appHeight,
@@ -551,6 +595,7 @@ async function init() {
     await sleep(8000);
     startMusic();
     startSignatureNeonEffect();
+    showMiniLogo();
   });
 }
 

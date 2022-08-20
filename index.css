@@ -10,9 +10,16 @@ body {
   overflow: hidden;
 }
 
+:root {
+  --scalingBigWidth: 0px;
+  --scalingSmallWidth: 0px;
+  --scalingBigRatio: 0;
+  --scalingSmallRatio: 0;
+}
+
 /* BACKGROUND */
 body {
-  background-image: url("https://cdn.dribbble.com/users/2420234/screenshots/5612047/dehill-thesis-2-dribble.gif#randy");
+  background-image: url("./images/neon-background.gif#randy");
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
@@ -166,6 +173,98 @@ body {
   background-color: rgba(255, 255, 255, 0.5);
 }
 
+/* MINI LOGO */
+#mini-logo {
+  position: absolute;
+  bottom: 4vh;
+  right: 4vh;
+  z-index: -1;
+  opacity: 0;
+}
+
+#mini-logo .name {
+  display: flex;
+}
+
+#mini-logo .name * {
+  font-family: "American Typewriter", monospace;
+  font-size: 1.3rem;
+  font-weight: lighter;
+}
+
+#mini-logo .R, .d {
+  display: flex;
+  justify-content: center;
+}
+
+@keyframes rContainerScaling {
+  0% {
+    width: var(--scalingBigWidth);
+  }
+  100% {
+    width: var(--scalingSmallWidth);
+  }
+}
+
+@keyframes dContainerScaling {
+  0% {
+    width: var(--scalingSmallWidth);
+  }
+  100% {
+    width: var(--scalingBigWidth);
+  }
+}
+
+@keyframes rScaling {
+  0% {
+    transform: scaleX(var(--scalingBigRatio));
+  }
+  100% {
+    transform: scaleX(var(--scalingSmallRatio));
+  }
+}
+
+@keyframes dScaling {
+  0% {
+    transform: scaleX(var(--scalingSmallRatio));
+  }
+  100% {
+    transform: scaleX(var(--scalingBigRatio));
+  }
+}
+
+@keyframes hobbiesAnimation {
+  0.5% {
+    transform: translateY(-2.5rem);
+  }
+  25% {
+    transform: translateY(-2.5rem);
+  }
+  25.0125% {
+    transform: translateY(0px);
+  }
+}
+
+#mini-logo .hobbies {
+  overflow: hidden;
+  height: 2.5rem;
+  position: relative;
+}
+
+#mini-logo .hobbies div {
+  position: absolute;
+  left: 0px;
+  top: 2.5rem;
+  font-family: URW Chancery L, cursive;
+  font-size: 1.3rem;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #e09ce0;
+}
+
 /* CELLS */
 #app {
   display: grid;
@@ -206,7 +305,7 @@ body {
 
 /* LOADING SCREEN */
 #loading {
-  z-index: 4;
+  z-index: 6;
   position: absolute;
   top: 0px;
   width: 100%;
