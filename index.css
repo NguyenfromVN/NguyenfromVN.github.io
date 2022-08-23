@@ -234,14 +234,17 @@ body {
 }
 
 @keyframes hobbiesAnimation {
-  0.75% {
+  1% {
     transform: translateY(-2.5rem);
   }
   25% {
     transform: translateY(-2.5rem);
   }
-  25.0125% {
-    transform: translateY(0px);
+  26% {
+    transform: translateY(-5rem);
+  }
+  100% {
+    transform: translateY(-5rem);
   }
 }
 

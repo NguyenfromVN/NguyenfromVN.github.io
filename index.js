@@ -225,11 +225,7 @@ function startDotGame() {
   }, TIME_BETWEEN_DOT_GENERATE);
 }
 
-function onCellTouch(
-  row,
-  col,
-  triggeredByCode = false,
-) {
+function onCellTouch(row, col, triggeredByCode = false) {
   makeCellAnimation(row, col, 0, triggeredByCode);
   // wave effect, similar to how bfs works
   const maxDistance = rows + cols;
@@ -511,7 +507,8 @@ function showMainPanel(mainContainerSizeAfterScaling) {
 function showMiniLogo() {
   const scalingBigRatio = 1.5;
   const scalingSmallRatio = 0.5;
-  const animationLength = 2;
+  const nameAnimationLength = 2;
+  const hobbiesAnimationLength = 2.08;
   // animation for name
   const characterWidth = document.querySelector('#mini-logo .R').offsetWidth;
   root.style.setProperty(
@@ -525,19 +522,19 @@ function showMiniLogo() {
   root.style.setProperty('--scalingBigRatio', `${scalingBigRatio}`);
   root.style.setProperty('--scalingSmallRatio', `${scalingSmallRatio}`);
   const rContainer = document.querySelector('#mini-logo .R');
-  rContainer.style.animation = `rContainerScaling ${animationLength}s ease-in-out infinite alternate`;
+  rContainer.style.animation = `rContainerScaling ${nameAnimationLength}s ease-in-out infinite alternate`;
   const dContainer = document.querySelector('#mini-logo .d');
-  dContainer.style.animation = `dContainerScaling ${animationLength}s ease-in-out infinite alternate`;
+  dContainer.style.animation = `dContainerScaling ${nameAnimationLength}s ease-in-out infinite alternate`;
   const rCharacter = document.querySelector('#mini-logo .R div');
-  rCharacter.style.animation = `rScaling ${animationLength}s ease-in-out infinite alternate`;
+  rCharacter.style.animation = `rScaling ${nameAnimationLength}s ease-in-out infinite alternate`;
   const dCharacter = document.querySelector('#mini-logo .d div');
-  dCharacter.style.animation = `dScaling ${animationLength}s ease-in-out infinite alternate`;
+  dCharacter.style.animation = `dScaling ${nameAnimationLength}s ease-in-out infinite alternate`;
   // animation for hobbies
   const hobbiesDiv = document.querySelectorAll('#mini-logo .hobbies div');
   for (let i = 0; i < hobbiesDiv.length; i++) {
     hobbiesDiv[i].style.animation = `hobbiesAnimation ${
-      animationLength * hobbiesDiv.length
-    }s ${animationLength * i}s linear infinite`;
+      hobbiesAnimationLength * hobbiesDiv.length
+    }s ${hobbiesAnimationLength * i}s linear infinite`;
   }
   // show after 1s to skip weird looking first state of elements
   const miniLogoContainer = document.getElementById('mini-logo');
