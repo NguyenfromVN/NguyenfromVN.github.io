@@ -187,8 +187,8 @@ body {
 }
 
 #mini-logo .name * {
-  font-family: "American Typewriter", monospace;
-  font-size: 1.3rem;
+  font-family: "Playfair Display SC", monospace;
+  font-size: 1.4rem;
   font-weight: lighter;
 }
 
@@ -235,31 +235,31 @@ body {
 
 @keyframes hobbiesAnimation {
   1% {
-    transform: translateY(-2.5rem);
+    transform: translateY(-2.7rem);
   }
   25% {
-    transform: translateY(-2.5rem);
+    transform: translateY(-2.7rem);
   }
   26% {
-    transform: translateY(-5rem);
+    transform: translateY(-5.4rem);
   }
   100% {
-    transform: translateY(-5rem);
+    transform: translateY(-5.4rem);
   }
 }
 
 #mini-logo .hobbies {
   overflow: hidden;
-  height: 2.5rem;
+  height: 2.7rem;
   position: relative;
 }
 
 #mini-logo .hobbies div {
   position: absolute;
   left: 0px;
-  top: 2.5rem;
+  top: 2.7rem;
   font-family: "Permanent Marker", serif;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   height: 100%;
   width: 100%;
   display: flex;

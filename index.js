@@ -508,7 +508,8 @@ function showMiniLogo() {
   const scalingBigRatio = 1.5;
   const scalingSmallRatio = 0.5;
   const nameAnimationLength = 2;
-  const hobbiesAnimationLength = 2.08;
+  const translateAnimationLength = 0.08;
+  const hobbiesAnimationLength = 2 + translateAnimationLength;
   // animation for name
   const characterWidth = document.querySelector('#mini-logo .R').offsetWidth;
   root.style.setProperty(
@@ -533,8 +534,8 @@ function showMiniLogo() {
   const hobbiesDiv = document.querySelectorAll('#mini-logo .hobbies div');
   for (let i = 0; i < hobbiesDiv.length; i++) {
     hobbiesDiv[i].style.animation = `hobbiesAnimation ${
-      hobbiesAnimationLength * hobbiesDiv.length
-    }s ${hobbiesAnimationLength * i}s linear infinite`;
+      (hobbiesAnimationLength - translateAnimationLength) * hobbiesDiv.length
+    }s ${(hobbiesAnimationLength - translateAnimationLength) * i}s linear infinite`;
   }
   // show after 1s to skip weird looking first state of elements
   const miniLogoContainer = document.getElementById('mini-logo');
