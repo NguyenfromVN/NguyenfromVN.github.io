@@ -424,11 +424,10 @@ function startMusicVisualization(analyser) {
   };
 }
 
-function startMusic() {
+async function startMusic() {
   if (!tracksBuffer.length) {
     return;
   }
-  const stopTrackInfoHandler = createTrackInfo(tracksBuffer[currentTrackIndex]);
   const analyser = audioCtx.createAnalyser();
   analyser.minDecibels = -90;
   analyser.maxDecibels = -10;
@@ -440,9 +439,11 @@ function startMusic() {
   analyser.connect(audioCtx.destination);
   source.start();
   // animation at the beginning of the song
-  onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true);
+  setTimeout(() => onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true), 35);
   analyser.fftSize = FFT_SIZE;
   const stopVisualizationHandler = startMusicVisualization(analyser);
+  await sleep(500);
+  const stopTrackInfoHandler = createTrackInfo(tracksBuffer[currentTrackIndex]);
   source.onended = async () => {
     stopVisualizationHandler();
     stopTrackInfoHandler(true);
@@ -497,17 +498,17 @@ function showMainPanel(mainContainerSizeAfterScaling) {
   }, 5000);
   const diskContainer = document.getElementById('disk');
   diskContainer.classList.add('disk-animation');
-  // remove mask after signature's animation is done
+  // make mask fade after signature's animation is done
   const mask = document.getElementById('mask');
   mask.classList.add('faded-effect');
-  // remove after 1 second of starting time, to avoid heavy load
-  setTimeout(() => mask.remove(), 9000);
+  // remove mask after 2s from starting time, to avoid heavy load
+  setTimeout(() => mask.remove(), 10000);
 }
 
 function showMiniLogo() {
   const scalingBigRatio = 1.5;
   const scalingSmallRatio = 0.5;
-  const nameAnimationLength = 2;
+  const nameAnimationLength = 1.5;
   const translateAnimationLength = 0.08;
   const hobbiesAnimationLength = 2 + translateAnimationLength;
   // animation for name
@@ -537,12 +538,10 @@ function showMiniLogo() {
       (hobbiesAnimationLength - translateAnimationLength) * hobbiesDiv.length
     }s ${(hobbiesAnimationLength - translateAnimationLength) * i}s linear infinite`;
   }
-  // show after 1s to skip weird looking first state of elements
+  // show mini logo
   const miniLogoContainer = document.getElementById('mini-logo');
-  setTimeout(() => {
-    miniLogoContainer.style.transition = 'opacity 1s';
-    miniLogoContainer.style.opacity = '1';
-  }, 1000);
+  miniLogoContainer.style.transition = 'opacity 1s linear';
+  miniLogoContainer.style.opacity = '1';
 }
 
 function prepareTrackInfoLayout(
@@ -588,12 +587,14 @@ async function init() {
     // remove loading screen after the user clicks
     loadingScreen.remove();
     showMainPanel(mainContainerSizeAfterScaling);
-    startDotGame();
+    // delay 1.5s to avoid heavy load
+    setTimeout(startDotGame, 1500);
     prepareTrackInfoLayout(appWidth, appHeight, mainContainerSizeAfterScaling);
     await sleep(8000);
     startMusic();
     startSignatureNeonEffect();
-    showMiniLogo();
+    // delay 1s to avoid heavy load
+    setTimeout(showMiniLogo, 1000);
   });
 }
 
