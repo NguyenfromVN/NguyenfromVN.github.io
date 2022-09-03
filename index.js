@@ -14,21 +14,21 @@ const MAX_DOTS = 3;
 const MAX_DOT_EXISTING_TIME = MAX_DOTS * TIME_BETWEEN_DOT_GENERATE;
 const TRACKS = [
   {
-    path: './tracks/devil-eyes.mp3',
+    path: './tracks/1.hex',
     name: 'Devil Eyes',
     artist: 'Hippie Sabotage',
   },
   {
-    path: './tracks/giveon-heartbreak-anniversary.mp3',
+    path: './tracks/2.hex',
     name: 'Heartbreak Anniversary',
     artist: 'Giveon',
   },
   {
-    path: './tracks/glass-animals-the-other-side-of-paradise.mp3',
+    path: './tracks/3.hex',
     name: 'The Other Side Of Paradise',
     artist: 'Glass Animals',
   },
-  { path: './tracks/loverboy.mp3', name: 'Loverboy', artist: 'A-Wall' },
+  { path: './tracks/4.hex', name: 'Loverboy', artist: 'A-Wall' },
 ];
 const LOADING_FADE_OUT_TIME = 1000;
 const MIN_LOADING_TIME = 4000;
