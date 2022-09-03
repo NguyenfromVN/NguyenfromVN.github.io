@@ -398,7 +398,9 @@ function startMusicVisualization(analyser) {
     analyser.getByteFrequencyData(dataArray);
     for (let i = 0; i < visualizationBars.length; i++) {
       const bar = visualizationBars[i];
-      bar.style.width = `${(dataArray[i] / 255) * 3 * diskSize}px`;
+      const barWidth = bar.offsetWidth;
+      const newWidth = (dataArray[i] / 255) * 3 * diskSize;
+      bar.style.transform = `scaleX(${newWidth / barWidth})`;
     }
     const dBBass = dataArray[0];
     const dBTreble = dataArray[6];
@@ -417,7 +419,7 @@ function startMusicVisualization(analyser) {
     trebleCircle.style.transform = 'scale(1)';
     for (let i = 0; i < visualizationBars.length; i++) {
       const bar = visualizationBars[i];
-      bar.style.width = '0px';
+      bar.style.transform = 'scaleX(0)';
     }
     // stop visualization
     clearInterval(musicVisualizationIntervalID);
@@ -439,7 +441,10 @@ async function startMusic() {
   analyser.connect(audioCtx.destination);
   source.start();
   // animation at the beginning of the song
-  setTimeout(() => onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true), 35);
+  setTimeout(
+    () => onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true),
+    35,
+  );
   analyser.fftSize = FFT_SIZE;
   const stopVisualizationHandler = startMusicVisualization(analyser);
   await sleep(500);
@@ -503,6 +508,14 @@ function showMainPanel(mainContainerSizeAfterScaling) {
   mask.classList.add('faded-effect');
   // remove mask after 2s from starting time, to avoid heavy load
   setTimeout(() => mask.remove(), 10000);
+  // styling for bars
+  for (let i = 0; i < visualizationBars.length; i++) {
+    const bar = visualizationBars[i];
+    bar.style.width = `${
+      mainContainerSize * (2 - i / (visualizationBars.length - 1))
+    }px`;
+    bar.style.transform = 'scaleX(0)';
+  }
 }
 
 function showMiniLogo() {
@@ -536,7 +549,9 @@ function showMiniLogo() {
   for (let i = 0; i < hobbiesDiv.length; i++) {
     hobbiesDiv[i].style.animation = `hobbiesAnimation ${
       (hobbiesAnimationLength - translateAnimationLength) * hobbiesDiv.length
-    }s ${(hobbiesAnimationLength - translateAnimationLength) * i}s linear infinite`;
+    }s ${
+      (hobbiesAnimationLength - translateAnimationLength) * i
+    }s linear infinite`;
   }
   // show mini logo
   const miniLogoContainer = document.getElementById('mini-logo');
