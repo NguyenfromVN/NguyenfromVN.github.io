@@ -1,7 +1,7 @@
 // CONSTANTS
 const CELLS_PER_ROW = 25;
 const CELLS_PER_ROW_MOBILE = 13;
-const PROPAGATION_DELAY = 30;
+const PROPAGATION_DELAY = 31;
 const CELL_TOUCH_ANIMATION_LENGTH = 500;
 const DISTANCE_OF_DESTRUCTION = 3;
 const TIME_BETWEEN_DOT_GENERATE = 8000;
@@ -35,11 +35,9 @@ const MIN_LOADING_TIME = 4000;
 const MAIN_CONTENT_SIZE = 20; // relative size in percentage
 const MAIN_CONTENT_SIZE_MOBILE = 15; // relative size in percentage
 const FFT_SIZE = 64;
-const VISUALIZATION_UPDATE_TIME = 20; // 50fps
-const TRACK_INFO_HEIGHT = 0.7; // relative size compared to main content
+const VISUALIZATION_UPDATE_TIME = 23; // ~43fps
+const TRACK_INFO_HEIGHT = 0.8; // relative size compared to main content
 const TRACK_INFO_TRAVEL_TIME = 40000;
-const TIME_BETWEEN_TRACK_INFO_SPAN = 0;
-const TIME_BETWEEN_FLICKERING_ANIMATION = 11000;
 
 // GLOBAL VARS
 let rows;
@@ -189,11 +187,10 @@ function startSignatureNeonEffect() {
       });
     }
     makeFlickeringEffect([
-      50, 50, 50, 50, 50, 50, 500, 300, 500, 50, 100, 50, 800,
+      47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 1013, 97, 1013, 97, 1511,
     ]);
   }
   makeEffect();
-  setInterval(makeEffect, TIME_BETWEEN_FLICKERING_ANIMATION);
 }
 
 function startDotGame() {
@@ -320,7 +317,7 @@ function createTrackInfo({ name, artist }) {
   const trackInfoContainer = document.getElementById('track-info');
   const trackInfoWidth = trackInfoContainer.offsetWidth;
   const trackInfoHeight = trackInfoContainer.offsetHeight;
-  const fontSize = 0.8 * trackInfoHeight;
+  const fontSize = 0.75 * trackInfoHeight;
   const content = `${name} - ${artist}`;
   const dummySpan = addSpanToTrackInfo(content, fontSize, trackInfoContainer);
   const spanWidth = dummySpan.offsetWidth;
@@ -328,8 +325,7 @@ function createTrackInfo({ name, artist }) {
   const spanTransitionTime = (TRACK_INFO_TRAVEL_TIME
       * (trackInfoWidth + spanWidth - 2 * trackInfoHeight))
     / trackInfoWidth;
-  const timeBetWeenSpan = (TRACK_INFO_TRAVEL_TIME * spanWidth) / trackInfoWidth
-    + TIME_BETWEEN_TRACK_INFO_SPAN;
+  const timeBetWeenSpan = (TRACK_INFO_TRAVEL_TIME * spanWidth) / trackInfoWidth;
   function addNewSpan() {
     const span = addSpanToTrackInfo(content, fontSize, trackInfoContainer);
     span.style.top = `${(trackInfoHeight - spanHeight) / 2}px`;
@@ -447,7 +443,8 @@ async function startMusic() {
   );
   analyser.fftSize = FFT_SIZE;
   const stopVisualizationHandler = startMusicVisualization(analyser);
-  await sleep(500);
+  // delay to avoid heavy load
+  await sleep(601);
   const stopTrackInfoHandler = createTrackInfo(tracksBuffer[currentTrackIndex]);
   source.onended = async () => {
     stopVisualizationHandler();
@@ -496,7 +493,7 @@ function showMainPanel(mainContainerSizeAfterScaling) {
   const signature = document.getElementById('signature');
   signature.style.strokeDashoffset = '0';
   const signatureContainer = document.getElementById('signature-container');
-  signatureContainer.style.transform = `scale(${isMobileDevice() ? 3 : 6})`;
+  signatureContainer.style.transform = `scale(${isMobileDevice() ? 3.5 : 5.5})`;
   setTimeout(() => {
     signatureContainer.style.transition = 'transform 3s ease-in-out';
     signatureContainer.style.transform = 'scale(1)';
@@ -602,14 +599,14 @@ async function init() {
     // remove loading screen after the user clicks
     loadingScreen.remove();
     showMainPanel(mainContainerSizeAfterScaling);
-    // delay 1.5s to avoid heavy load
-    setTimeout(startDotGame, 1500);
+    // delay to avoid heavy load
+    setTimeout(startDotGame, 1409);
     prepareTrackInfoLayout(appWidth, appHeight, mainContainerSizeAfterScaling);
     await sleep(8000);
     startMusic();
     startSignatureNeonEffect();
-    // delay 1s to avoid heavy load
-    setTimeout(showMiniLogo, 1000);
+    // delay to avoid heavy load
+    setTimeout(showMiniLogo, 1013);
   });
 }
 
