@@ -6,7 +6,7 @@ const CELL_TOUCH_ANIMATION_LENGTH = 500;
 const DISTANCE_OF_DESTRUCTION = 3;
 const TIME_BETWEEN_DOT_GENERATE = 8000;
 const MIN_DOT_SIZE = 6; // relative size in percentage
-const MAX_DOT_SIZE = 10; // relative size in percentage
+const MAX_DOT_SIZE = 8; // relative size in percentage
 const MIN_DOT_SIZE_MOBILE = 20;
 const MAX_DOT_SIZE_MOBILE = 25;
 const DOT_ANIMATION_LENGTH = 1000;
@@ -35,7 +35,7 @@ const MIN_LOADING_TIME = 4000;
 const MAIN_CONTENT_SIZE = 20; // relative size in percentage
 const MAIN_CONTENT_SIZE_MOBILE = 15; // relative size in percentage
 const FFT_SIZE = 64;
-const VISUALIZATION_UPDATE_TIME = 23; // ~43fps
+const VISUALIZATION_UPDATE_TIME = 25; // 40fps
 const TRACK_INFO_HEIGHT = 0.8; // relative size compared to main content
 const TRACK_INFO_TRAVEL_TIME = 40000;
 
@@ -50,6 +50,7 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let currentTrackIndex = 0;
 const visualizationBars = document.getElementsByClassName('bar');
 const root = document.querySelector(':root');
+let widgetsExpanded = false;
 
 // UTILS
 function square(number) {
@@ -205,7 +206,7 @@ function startDotGame() {
     const minDotSize = isMobileDevice() ? MIN_DOT_SIZE_MOBILE : MIN_DOT_SIZE;
     const maxDotSize = isMobileDevice() ? MAX_DOT_SIZE_MOBILE : MAX_DOT_SIZE;
     const dotSize = (getRandom(minDotSize, maxDotSize) / 100) * appWidth;
-    const top = getRandom(0, Math.floor((appHeight - dotSize) / 4));
+    const top = getRandom(appHeight / 20, appHeight / 10);
     const left = getRandom(0, appWidth - dotSize);
     const dot = createDot(dotSize, top, left);
     addUniversalSensitiveClickListener(dot, () => {
@@ -328,6 +329,13 @@ function createTrackInfo({ name, artist }) {
   const timeBetWeenSpan = (TRACK_INFO_TRAVEL_TIME * spanWidth) / trackInfoWidth;
   function addNewSpan() {
     const span = addSpanToTrackInfo(content, fontSize, trackInfoContainer);
+    // optimization
+    span.style.willChange = 'transform';
+    setTimeout(() => {
+      if (span?.style?.willChange) {
+        span.style.willChange = 'auto';
+      }
+    }, spanTransitionTime);
     span.style.top = `${(trackInfoHeight - spanHeight) / 2}px`;
     span.style.left = `${trackInfoWidth - 2 * trackInfoHeight}px`;
     span.style.transition = `transform ${spanTransitionTime}ms linear, opacity 1s`;
@@ -574,6 +582,50 @@ function prepareTrackInfoLayout(
   trackInfoContainer.style.transform = `rotate(${-alpha}rad)`;
 }
 
+function showWidgets() {
+  const widgetsContainer = document.getElementById('widgets');
+  const widgetsIcon = document.querySelectorAll('#widgets img');
+  const widgetContents = document.querySelectorAll('#widgets .wrapper .content');
+  function makeWidgetsAnimation(willExpand) {
+    widgetsExpanded = willExpand;
+    // animation for widget icons
+    for (let i = 0; i < widgetsIcon.length; i++) {
+      const widgetIcon = widgetsIcon[i];
+      const addedClassName = willExpand
+        ? 'widget-icon-expand'
+        : 'widget-icon-collapse';
+      const removedClassName = willExpand
+        ? 'widget-icon-collapse'
+        : 'widget-icon-expand';
+      widgetIcon.classList.remove(removedClassName);
+      makeAnimation(widgetIcon, addedClassName);
+    }
+    // animation for widget containers
+    for (let i = 0; i < widgetContents.length; i++) {
+      const widgetContent = widgetContents[i];
+      const addedClassName = willExpand
+        ? 'widget-content-expand'
+        : 'widget-content-collapse';
+      const removedClassName = willExpand
+        ? 'widget-content-collapse'
+        : 'widget-content-expand';
+      widgetContent.classList.remove(removedClassName);
+      makeAnimation(widgetContent, addedClassName);
+    }
+    // animation for widgets container
+    const addedClassName = willExpand ? 'widgets-expand' : 'widgets-collapse';
+    const removedClassName = willExpand ? 'widgets-collapse' : 'widgets-expand';
+    widgetsContainer.classList.remove(removedClassName);
+    makeAnimation(widgetsContainer, addedClassName);
+  }
+  addUniversalSensitiveClickListener(widgetsContainer, () => {
+    makeWidgetsAnimation(!widgetsExpanded);
+  });
+  // show widgets
+  widgetsContainer.style.transition = 'opacity 1s linear';
+  widgetsContainer.style.opacity = '1';
+}
+
 // INIT FUNCTION
 async function init() {
   const appWidth = AppContainer.offsetWidth;
@@ -606,7 +658,10 @@ async function init() {
     startMusic();
     startSignatureNeonEffect();
     // delay to avoid heavy load
-    setTimeout(showMiniLogo, 1013);
+    setTimeout(() => {
+      showMiniLogo();
+      showWidgets();
+    }, 1013);
   });
 }
 
