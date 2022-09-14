@@ -29,6 +29,126 @@ const TRACKS = [
     artist: 'Glass Animals',
   },
   { path: './tracks/4.hex', name: 'Loverboy', artist: 'A-Wall' },
+  {
+    path: './tracks/5.hex',
+    name: '50 Feet',
+    artist: 'SoMo',
+  },
+  {
+    path: './tracks/6.hex',
+    name: 'Can We Kiss Forever',
+    artist: 'Kina',
+  },
+  {
+    path: './tracks/7.hex',
+    name: 'Fashion Week',
+    artist: 'Blackbear',
+  },
+  {
+    path: './tracks/8.hex',
+    name: 'Gang Shit No Lame Shit',
+    artist: 'Key Glock',
+  },
+  {
+    path: './tracks/9.hex',
+    name: 'Goodbyes',
+    artist: 'Post Malone',
+  },
+  {
+    path: './tracks/10.hex',
+    name: 'Gravity',
+    artist: 'Umpire',
+  },
+  {
+    path: './tracks/11.hex',
+    name: "I'm Not The Only One",
+    artist: 'Sam Smith',
+  },
+  {
+    path: './tracks/12.hex',
+    name: 'in luv with u',
+    artist: 'pxzvc',
+  },
+  {
+    path: './tracks/13.hex',
+    name: 'Industry Baby',
+    artist: 'Lil Nas X',
+  },
+  {
+    path: './tracks/14.hex',
+    name: 'Infinite',
+    artist: 'Valence',
+  },
+  {
+    path: './tracks/15.hex',
+    name: 'Life Is Over',
+    artist: 'Anikdote',
+  },
+  {
+    path: './tracks/16.hex',
+    name: 'Mine',
+    artist: 'Bazzi',
+  },
+  {
+    path: './tracks/17.hex',
+    name: 'No Stylist',
+    artist: 'French Montana & Drake',
+  },
+  {
+    path: './tracks/18.hex',
+    name: 'Ocean Eyes',
+    artist: 'Billie Eilish',
+  },
+  {
+    path: './tracks/19.hex',
+    name: 'One More Night',
+    artist: 'Maroon 5',
+  },
+  {
+    path: './tracks/20.hex',
+    name: 'Perfect Time',
+    artist: 'Toby Tranter',
+  },
+  {
+    path: './tracks/21.hex',
+    name: 'Roses',
+    artist: 'The Chainsmokers',
+  },
+  {
+    path: './tracks/22.hex',
+    name: 'Run Away With Me',
+    artist: 'Carly Rae Jepsen',
+  },
+  {
+    path: './tracks/23.hex',
+    name: 'Save Your Tears',
+    artist: 'The Weeknd',
+  },
+  {
+    path: './tracks/24.hex',
+    name: 'Stay',
+    artist: 'The Kid LAROI, Justin Bieber',
+  },
+  {
+    path: './tracks/25.hex',
+    name: 'Still',
+    artist: 'D.R.E',
+  },
+  {
+    path: './tracks/26.hex',
+    name: 'Wasted',
+    artist: 'Jerry Purpdrank',
+  },
+  {
+    path: './tracks/27.hex',
+    name: 'White Gold',
+    artist: 'Tommy Ljungberg',
+  },
+  {
+    path: './tracks/28.hex',
+    name: 'Why We Lose',
+    artist: 'Cartoon',
+  },
 ];
 const LOADING_FADE_OUT_TIME = 1000;
 const MIN_LOADING_TIME = 4000;
@@ -38,6 +158,7 @@ const FFT_SIZE = 64;
 const VISUALIZATION_UPDATE_TIME = 25; // 40fps
 const TRACK_INFO_HEIGHT = 0.8; // relative size compared to main content
 const TRACK_INFO_TRAVEL_TIME = 40000;
+const TRACKS_COUNT = 4;
 
 // GLOBAL VARS
 let rows;
@@ -285,7 +406,13 @@ const loadSingleTrack = ({ path, name, artist }) => new Promise((resolve) => {
 });
 
 const loadTracks = () => new Promise((resolve) => {
-  Promise.any(TRACKS.map((track) => loadSingleTrack(track))).then(resolve);
+  const selectedIndexes = {};
+  while (Object.keys(selectedIndexes).length < TRACKS_COUNT) {
+    const randomIndex = getRandom(0, TRACKS.length - 1);
+    selectedIndexes[randomIndex] = TRACKS[randomIndex];
+  }
+  const selectedTracks = Object.keys(selectedIndexes).map((index) => TRACKS[index]);
+  Promise.any(selectedTracks.map((track) => loadSingleTrack(track))).then(resolve);
 });
 
 function clearOldSpans(trackInfoContainer) {
@@ -585,7 +712,9 @@ function prepareTrackInfoLayout(
 function showWidgets() {
   const widgetsContainer = document.getElementById('widgets');
   const widgetsIcon = document.querySelectorAll('#widgets img');
-  const widgetContents = document.querySelectorAll('#widgets .wrapper .content');
+  const widgetContents = document.querySelectorAll(
+    '#widgets .wrapper .content',
+  );
   function makeWidgetsAnimation(willExpand) {
     widgetsExpanded = willExpand;
     // animation for widget icons
