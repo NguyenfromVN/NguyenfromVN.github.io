@@ -158,7 +158,6 @@ const FFT_SIZE = 64;
 const VISUALIZATION_UPDATE_TIME = 25; // 40fps
 const TRACK_INFO_HEIGHT = 0.8; // relative size compared to main content
 const TRACK_INFO_TRAVEL_TIME = 40000;
-const TRACKS_COUNT = 4;
 
 // GLOBAL VARS
 let rows;
@@ -166,12 +165,12 @@ let cols;
 const AppContainer = document.getElementById('app');
 const cells = [];
 const isCellExisted = [];
-const tracksBuffer = [];
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let currentTrackIndex = 0;
 const visualizationBars = document.getElementsByClassName('bar');
 const root = document.querySelector(':root');
 let widgetsExpanded = false;
+let trackBuffer = null;
 
 // UTILS
 function square(number) {
@@ -391,12 +390,12 @@ const loadSingleTrack = ({ path, name, artist }) => new Promise((resolve) => {
     audioCtx.decodeAudioData(
       audioData,
       (audioBuffer) => {
-        tracksBuffer.push({
+        trackBuffer = {
           path,
           name,
           artist,
           buffer: audioBuffer,
-        });
+        };
         resolve();
       },
       () => resolve(),
@@ -406,13 +405,25 @@ const loadSingleTrack = ({ path, name, artist }) => new Promise((resolve) => {
 });
 
 const loadTracks = () => new Promise((resolve) => {
-  const selectedIndexes = {};
-  while (Object.keys(selectedIndexes).length < TRACKS_COUNT) {
-    const randomIndex = getRandom(0, TRACKS.length - 1);
-    selectedIndexes[randomIndex] = TRACKS[randomIndex];
+  // shuffle tracks array
+  const tracksCount = TRACKS.length;
+  for (let i = 0; i < tracksCount; i++) {
+    const newIndex = getRandom(0, tracksCount - 1);
+    // swap 2 tracks
+    const temp = TRACKS[i];
+    TRACKS[i] = TRACKS[newIndex];
+    TRACKS[newIndex] = temp;
   }
-  const selectedTracks = Object.keys(selectedIndexes).map((index) => TRACKS[index]);
-  Promise.any(selectedTracks.map((track) => loadSingleTrack(track))).then(resolve);
+  // load first track
+  loadSingleTrack(TRACKS[0]).then(resolve);
+  // load next tracks
+  setInterval(() => {
+    if (trackBuffer !== null) {
+      return;
+    }
+    currentTrackIndex = (currentTrackIndex + 1) % tracksCount;
+    loadSingleTrack(TRACKS[currentTrackIndex]);
+  }, 30000);
 });
 
 function clearOldSpans(trackInfoContainer) {
@@ -558,35 +569,37 @@ function startMusicVisualization(analyser) {
 }
 
 async function startMusic() {
-  if (!tracksBuffer.length) {
+  if (trackBuffer === null) {
     return;
   }
+  const currentTrack = trackBuffer;
+  trackBuffer = null;
   const analyser = audioCtx.createAnalyser();
   analyser.minDecibels = -90;
   analyser.maxDecibels = -10;
   analyser.smoothingTimeConstant = 0.85;
   const source = audioCtx.createBufferSource();
-  const audioBuffer = tracksBuffer[currentTrackIndex].buffer;
+  const audioBuffer = currentTrack.buffer;
   source.buffer = audioBuffer;
   source.connect(analyser);
   analyser.connect(audioCtx.destination);
   source.start();
   // animation at the beginning of the song
+  // delay to avoid heavy load
   setTimeout(
     () => onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true),
-    35,
+    37,
   );
   analyser.fftSize = FFT_SIZE;
   const stopVisualizationHandler = startMusicVisualization(analyser);
   // delay to avoid heavy load
   await sleep(601);
-  const stopTrackInfoHandler = createTrackInfo(tracksBuffer[currentTrackIndex]);
+  const stopTrackInfoHandler = createTrackInfo(currentTrack);
   source.onended = async () => {
     stopVisualizationHandler();
     stopTrackInfoHandler(true);
-    // move to next track
-    currentTrackIndex = (currentTrackIndex + 1) % tracksBuffer.length;
     await sleep(1000);
+    // play next track
     startMusic();
   };
 }
