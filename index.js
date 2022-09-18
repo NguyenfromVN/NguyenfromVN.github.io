@@ -193,6 +193,7 @@ let wsEventID = 3;
 let lastPongMessageTime = 0;
 let lastBTCPrice = null;
 let lastETHPrice = null;
+let lastMessageTime = 0;
 
 // UTILS
 function square(number) {
@@ -868,7 +869,6 @@ function createWSConnection() {
         previousPrice: lastBTCPrice, currentPrice: price,
       });
       lastBTCPrice = price;
-      sendPongMessage();
     },
     [BTCUSDT_STATISTIC_STREAM_NAME]: ({
       price: priceChange,
@@ -877,7 +877,6 @@ function createWSConnection() {
       updatePriceTracking(btcPriceTrackingContainer, {
         priceChange, priceChangePercent,
       }, true);
-      sendPongMessage();
     },
     [ETHUSDT_STREAM_NAME]: ({ price }) => {
       lastETHPrice = lastETHPrice ?? price;
@@ -885,7 +884,6 @@ function createWSConnection() {
         previousPrice: lastETHPrice, currentPrice: price,
       });
       lastETHPrice = price;
-      sendPongMessage();
     },
     [ETHUSDT_STATISTIC_STREAM_NAME]: ({
       price: priceChange,
@@ -895,14 +893,15 @@ function createWSConnection() {
         priceChange,
         priceChangePercent,
       }, true);
-      sendPongMessage();
     },
   };
   wsInstance.addEventListener('message', ({ data: message }) => {
+    lastMessageTime = new Date().getTime();
     const { data = {}, stream = 'unhandled_stream' } = JSON.parse(message);
     const price = Number(data.p);
     const priceChangePercent = Number(data.P);
     messageHandlers[stream]?.({ price, priceChangePercent });
+    sendPongMessage();
   });
 }
 
@@ -911,7 +910,8 @@ function startCryptoPriceTracking() {
   // check health every 10s
   setInterval(() => {
     const status = wsInstance?.readyState;
-    if (status === 0 || status === 1) {
+    const timeWithoutPingMessage = getTime() - lastMessageTime;
+    if (status === 0 || (status === 1 && timeWithoutPingMessage < 10000)) {
       return;
     }
     // try to open a new WS connection
