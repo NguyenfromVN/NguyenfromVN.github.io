@@ -131,8 +131,8 @@ const TRACKS = [
   },
   {
     path: './tracks/25.hex',
-    name: 'Still',
-    artist: 'D.R.E',
+    name: 'Still D.R.E.',
+    artist: 'Dr. Dre',
   },
   {
     path: './tracks/26.hex',
@@ -158,11 +158,28 @@ const FFT_SIZE = 64;
 const VISUALIZATION_UPDATE_TIME = 25; // 40fps
 const TRACK_INFO_HEIGHT = 0.8; // relative size compared to main content
 const TRACK_INFO_TRAVEL_TIME = 40000;
+const BTCUSDT_STREAM_NAME = 'btcusdt@aggTrade';
+const BTCUSDT_STATISTIC_STREAM_NAME = 'btcusdt@ticker';
+const ETHUSDT_STREAM_NAME = 'ethusdt@aggTrade';
+const ETHUSDT_STATISTIC_STREAM_NAME = 'ethusdt@ticker';
+const WS_CRYPTO_SUBSCRIBE_MESSAGE = {
+  method: 'SUBSCRIBE',
+  params: [
+    BTCUSDT_STREAM_NAME,
+    BTCUSDT_STATISTIC_STREAM_NAME,
+    ETHUSDT_STREAM_NAME,
+    ETHUSDT_STATISTIC_STREAM_NAME,
+  ],
+  id: 1,
+};
+const PONG_MESSAGE_TIME_INTERVAL = 5 * 60 * 1000;
 
 // GLOBAL VARS
 let rows;
 let cols;
 const AppContainer = document.getElementById('app');
+const btcPriceTrackingContainer = document.querySelector('#widgets .btc-tracking');
+const ethPriceTrackingContainer = document.querySelector('#widgets .eth-tracking');
 const cells = [];
 const isCellExisted = [];
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -171,6 +188,11 @@ const visualizationBars = document.getElementsByClassName('bar');
 const root = document.querySelector(':root');
 let widgetsExpanded = false;
 let trackBuffer = null;
+let wsInstance = null;
+let wsEventID = 3;
+let lastPongMessageTime = 0;
+let lastBTCPrice = null;
+let lastETHPrice = null;
 
 // UTILS
 function square(number) {
@@ -245,6 +267,21 @@ function roundToOddNumber(value) {
   const lower = Math.floor(value);
   const upper = lower + 1;
   return lower % 2 !== 0 ? lower : upper;
+}
+
+function formatCryptoNumber(number, {
+  hasDollarSign = true,
+  alwaysShowSign = false,
+  fractionDigits = 3,
+} = {}) {
+  const formatter = new Intl.NumberFormat('en-US', {
+    style: hasDollarSign ? 'currency' : undefined,
+    currency: hasDollarSign ? 'USD' : undefined,
+    signDisplay: alwaysShowSign ? 'always' : undefined,
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  });
+  return formatter.format(number);
 }
 
 // LOGIC
@@ -768,12 +805,127 @@ function showWidgets() {
   widgetsContainer.style.opacity = '1';
 }
 
+function killWSConnection() {
+  wsInstance?.close();
+  wsInstance = null;
+}
+
+function updatePriceTracking(element, {
+  previousPrice,
+  currentPrice,
+  priceChange,
+  priceChangePercent,
+}, for24hStatistic = false) {
+  if (!for24hStatistic) {
+    const priceStr = formatCryptoNumber(currentPrice);
+    const diff = currentPrice - previousPrice;
+    const diffStr = formatCryptoNumber(diff, { alwaysShowSign: true, fractionDigits: 4 });
+    const row1 = element.querySelector('.column-1 .row-1');
+    const row2 = element.querySelector('.column-1 .row-2');
+    const color = diff >= 0 ? '#0ecb83' : '#f6465d';
+    row1.textContent = priceStr;
+    row2.textContent = diffStr;
+    row2.style.color = color;
+  } else {
+    const row2 = element.querySelector('.column-2 .row-2');
+    const priceChangeStr = formatCryptoNumber(
+      priceChange,
+      { hasDollarSign: false, fractionDigits: 2 },
+    );
+    const priceChangePercentStr = formatCryptoNumber(
+      priceChangePercent,
+      { hasDollarSign: false, alwaysShowSign: true, fractionDigits: 2 },
+    );
+    const str = `${priceChangeStr} ${priceChangePercentStr}%`;
+    const color = priceChange >= 0 ? '#0ecb83' : '#f6465d';
+    row2.textContent = str;
+    row2.style.color = color;
+  }
+}
+
+function sendPongMessage() {
+  const currentTime = new Date().getTime();
+  const diff = currentTime - lastPongMessageTime;
+  if (diff >= PONG_MESSAGE_TIME_INTERVAL) {
+    wsInstance.send(JSON.stringify({ ...WS_CRYPTO_SUBSCRIBE_MESSAGE, id: wsEventID }));
+    wsEventID += 2;
+    lastPongMessageTime = currentTime;
+  }
+}
+
+function createWSConnection() {
+  killWSConnection();
+  // create a new WS instance
+  wsInstance = new WebSocket('wss://stream.binance.com/stream');
+  wsInstance.addEventListener('open', () => {
+    // subscribe to streams
+    wsInstance.send(JSON.stringify(WS_CRYPTO_SUBSCRIBE_MESSAGE));
+  });
+  const messageHandlers = {
+    [BTCUSDT_STREAM_NAME]: ({ price }) => {
+      lastBTCPrice = lastBTCPrice ?? price;
+      updatePriceTracking(btcPriceTrackingContainer, {
+        previousPrice: lastBTCPrice, currentPrice: price,
+      });
+      lastBTCPrice = price;
+      sendPongMessage();
+    },
+    [BTCUSDT_STATISTIC_STREAM_NAME]: ({
+      price: priceChange,
+      priceChangePercent,
+    }) => {
+      updatePriceTracking(btcPriceTrackingContainer, {
+        priceChange, priceChangePercent,
+      }, true);
+      sendPongMessage();
+    },
+    [ETHUSDT_STREAM_NAME]: ({ price }) => {
+      lastETHPrice = lastETHPrice ?? price;
+      updatePriceTracking(ethPriceTrackingContainer, {
+        previousPrice: lastETHPrice, currentPrice: price,
+      });
+      lastETHPrice = price;
+      sendPongMessage();
+    },
+    [ETHUSDT_STATISTIC_STREAM_NAME]: ({
+      price: priceChange,
+      priceChangePercent,
+    }) => {
+      updatePriceTracking(ethPriceTrackingContainer, {
+        priceChange,
+        priceChangePercent,
+      }, true);
+      sendPongMessage();
+    },
+  };
+  wsInstance.addEventListener('message', ({ data: message }) => {
+    const { data = {}, stream = 'unhandled_stream' } = JSON.parse(message);
+    const price = Number(data.p);
+    const priceChangePercent = Number(data.P);
+    messageHandlers[stream]?.({ price, priceChangePercent });
+  });
+}
+
+function startCryptoPriceTracking() {
+  createWSConnection();
+  // check health every 10s
+  setInterval(() => {
+    const status = wsInstance?.readyState;
+    if (status === 0 || status === 1) {
+      return;
+    }
+    // try to open a new WS connection
+    createWSConnection();
+  }, 10000);
+}
+
 // INIT FUNCTION
 async function init() {
   const appWidth = AppContainer.offsetWidth;
   const appHeight = AppContainer.offsetHeight;
   const startTime = getTime();
   createGridSystem(appWidth, appHeight);
+  startCryptoPriceTracking();
   await loadTracks();
   // wait more if loading time is way too fast
   const currentTime = getTime();

@@ -58,17 +58,17 @@ body {
 }
 
 .widgets-expand {
-  animation: resizeAnimation 0.4s ease-in-out forwards;
+  animation: resizeAnimation 0.6s ease-in-out forwards;
 }
 
 .widgets-collapse {
-  animation: resizeAnimation 0.4s ease-in-out reverse forwards;
+  animation: resizeAnimation 0.6s ease-in-out reverse forwards;
 }
 
 @keyframes resizeAnimation {
-  85% {
-    width: 31vh;
-    height: 31vh;
+  65% {
+    width: 31.5vh;
+    height: 31.5vh;
     flex-direction: column;
   }
   100% {
@@ -79,28 +79,29 @@ body {
 }
 
 .widget-icon-expand {
-  animation: widgetIconAnimation 0.4s ease-in-out forwards;
+  animation: widgetIconAnimation 0.6s ease-in-out forwards;
 }
 
 .widget-icon-collapse {
-  animation: widgetIconAnimation 0.4s ease-in-out reverse forwards;
+  animation: widgetIconAnimation 0.6s ease-in-out reverse forwards;
 }
 
 @keyframes widgetIconAnimation {
-  40% {
+  35% {
     opacity: 0;
     width: 3.5vh;
     height: 3.5vh;
   }
-  60% {
+  40% {
     opacity: 0;
+  }
+  60% {
     width: 4vh;
     height: 4vh;
   }
-  85% {
-    opacity: 0;
-    width: 4.5vh;
-    height: 4.5vh;
+  65% {
+    width: 4.1vh;
+    height: 4.1vh;
   }
   100% {
     opacity: 1;
@@ -113,22 +114,61 @@ body {
   display: flex;
 }
 
-#widgets .wrapper .content {
+#widgets .content {
   width: 0px;
-  background: #ffffff;
+  height: 0px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+#widgets .content .crypto * {
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+#widgets .crypto {
+  display: flex;
+  flex-direction: column;
+}
+
+#widgets .content .column-1 {
+  padding-left: 2vh;
+}
+
+#widgets .content .divider {
+  flex-grow: 1;
+}
+
+#widgets .crypto .row-1 {
+  font-size: 1.4vh;
+}
+
+#widgets .crypto .description {
+  font-size: 1vh;
+  color: #848e9c;
+  text-align: right;
+}
+
+#widgets .crypto .row-2 {
+  font-size: 1.1vh;
+  white-space: nowrap;
 }
 
 .widget-content-expand {
-  animation: widgetResizeAnimation 0.4s ease-in-out 0.4s forwards;
+  animation: widgetResizeAnimation 0.6s ease-in-out 0.4s forwards;
 }
 
 .widget-content-collapse {
-  animation: widgetResizeAnimation 0.06s ease-in-out reverse forwards;
+  animation: widgetResizeAnimation 0.21s ease-in-out reverse forwards;
 }
 
 @keyframes widgetResizeAnimation {
+  1% {
+    height: auto;
+  }
   100% {
     width: 22vh;
+    height: auto;
   }
 }
 
