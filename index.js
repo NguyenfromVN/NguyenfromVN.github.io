@@ -149,6 +149,11 @@ const TRACKS = [
     name: 'Why We Lose',
     artist: 'Cartoon',
   },
+  {
+    path: './tracks/29.hex',
+    name: "I Ain't Worried",
+    artist: 'OneRepublic',
+  },
 ];
 const LOADING_FADE_OUT_TIME = 1000;
 const MIN_LOADING_TIME = 4000;
