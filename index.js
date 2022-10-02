@@ -160,7 +160,7 @@ const MIN_LOADING_TIME = 4000;
 const MAIN_CONTENT_SIZE = 20; // relative size in percentage
 const MAIN_CONTENT_SIZE_MOBILE = 15; // relative size in percentage
 const FFT_SIZE = 64;
-const VISUALIZATION_UPDATE_TIME = 31; // ~32.3fps
+const VISUALIZATION_UPDATE_TIME = 27; // ~37fps
 const TRACK_INFO_HEIGHT = 0.8; // relative size compared to main content
 const TRACK_INFO_TRAVEL_TIME = 40000;
 const BTCUSDT_STREAM_NAME = 'btcusdt@aggTrade';
@@ -190,7 +190,6 @@ const isCellExisted = [];
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let currentTrackIndex = 0;
 const visualizationBars = document.getElementsByClassName('bar');
-const root = document.querySelector(':root');
 let widgetsExpanded = false;
 let trackBuffer = null;
 let wsInstance = null;
@@ -505,7 +504,7 @@ function createTrackInfo({ name, artist }) {
   const spanWidth = dummySpan.offsetWidth;
   const spanHeight = dummySpan.offsetHeight;
   const spanTransitionTime = (TRACK_INFO_TRAVEL_TIME
-      * (trackInfoWidth + spanWidth - 2 * trackInfoHeight))
+    * (trackInfoWidth + spanWidth - 2 * trackInfoHeight))
     / trackInfoWidth;
   const timeBetWeenSpan = (TRACK_INFO_TRAVEL_TIME * spanWidth) / trackInfoWidth;
   function addNewSpan() {
@@ -590,8 +589,7 @@ function startMusicVisualization(analyser) {
     const dBBass = dataArray[0];
     const dBTreble = dataArray[6];
     bassCircle.style.transform = `scaleX(${Math.min(1, dBBass / 230) * 1.25})`;
-    trebleCircle.style.transform = `scaleY(${
-      Math.min(1, dBTreble / 140) * 1.25
+    trebleCircle.style.transform = `scaleY(${Math.min(1, dBTreble / 140) * 1.25
     })`;
   };
   const musicVisualizationIntervalID = setInterval(
@@ -674,8 +672,7 @@ function showMainPanel(mainContainerSizeAfterScaling) {
   // styling for the main panel according to the screen size
   const mainContainer = document.getElementById('main');
   const mainContainerSize = mainContainer.offsetWidth;
-  mainContainer.style.transform = `scale(${
-    mainContainerSizeAfterScaling / mainContainerSize
+  mainContainer.style.transform = `scale(${mainContainerSizeAfterScaling / mainContainerSize
   })`;
   // show the main panel
   mainContainer.style.opacity = '1';
@@ -699,46 +696,20 @@ function showMainPanel(mainContainerSizeAfterScaling) {
   // styling for bars
   for (let i = 0; i < visualizationBars.length; i++) {
     const bar = visualizationBars[i];
-    bar.style.width = `${
-      mainContainerSize * (2 - i / (visualizationBars.length - 1))
+    bar.style.width = `${mainContainerSize * (2 - i / (visualizationBars.length - 1))
     }px`;
     bar.style.transform = 'scaleX(0)';
   }
 }
 
 function showMiniLogo() {
-  const scalingBigRatio = 1.5;
-  const scalingSmallRatio = 0.5;
-  const nameAnimationLength = 1.5;
   const translateAnimationLength = 0.08;
   const hobbiesAnimationLength = 2 + translateAnimationLength;
-  // animation for name
-  const characterWidth = document.querySelector('#mini-logo .R').offsetWidth;
-  root.style.setProperty(
-    '--scalingBigWidth',
-    `${characterWidth * scalingBigRatio}px`,
-  );
-  root.style.setProperty(
-    '--scalingSmallWidth',
-    `${characterWidth * scalingSmallRatio}px`,
-  );
-  root.style.setProperty('--scalingBigRatio', `${scalingBigRatio}`);
-  root.style.setProperty('--scalingSmallRatio', `${scalingSmallRatio}`);
-  const rContainer = document.querySelector('#mini-logo .R');
-  rContainer.style.animation = `rContainerScaling ${nameAnimationLength}s ease-in-out infinite alternate`;
-  const dContainer = document.querySelector('#mini-logo .d');
-  dContainer.style.animation = `dContainerScaling ${nameAnimationLength}s ease-in-out infinite alternate`;
-  const rCharacter = document.querySelector('#mini-logo .R div');
-  rCharacter.style.animation = `rScaling ${nameAnimationLength}s ease-in-out infinite alternate`;
-  const dCharacter = document.querySelector('#mini-logo .d div');
-  dCharacter.style.animation = `dScaling ${nameAnimationLength}s ease-in-out infinite alternate`;
   // animation for hobbies
   const hobbiesDiv = document.querySelectorAll('#mini-logo .hobbies div');
   for (let i = 0; i < hobbiesDiv.length; i++) {
-    hobbiesDiv[i].style.animation = `hobbiesAnimation ${
-      (hobbiesAnimationLength - translateAnimationLength) * hobbiesDiv.length
-    }s ${
-      (hobbiesAnimationLength - translateAnimationLength) * i
+    hobbiesDiv[i].style.animation = `hobbiesAnimation ${(hobbiesAnimationLength - translateAnimationLength) * hobbiesDiv.length
+    }s ${(hobbiesAnimationLength - translateAnimationLength) * i
     }s linear infinite`;
   }
   // show mini logo
@@ -943,7 +914,7 @@ async function init() {
   const loadingScreen = document.getElementById('loading');
   addUniversalSensitiveClickListener(loadingScreen, async () => {
     const mainContainerSizeAfterScaling = (appHeight
-        * (isMobileDevice() ? MAIN_CONTENT_SIZE_MOBILE : MAIN_CONTENT_SIZE))
+      * (isMobileDevice() ? MAIN_CONTENT_SIZE_MOBILE : MAIN_CONTENT_SIZE))
       / 100;
     loadingScreen.style.opacity = '0';
     await sleep(LOADING_FADE_OUT_TIME);

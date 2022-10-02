@@ -10,13 +10,6 @@ body {
   overflow: hidden;
 }
 
-:root {
-  --scalingBigWidth: 0px;
-  --scalingSmallWidth: 0px;
-  --scalingBigRatio: 0;
-  --scalingSmallRatio: 0;
-}
-
 /* BACKGROUND */
 body {
   background-image: url("./images/neon-background.gif#randy");
@@ -140,17 +133,17 @@ body {
 }
 
 #widgets .crypto .row-1 {
-  font-size: 1.4vh;
+  font-size: 1.5vh;
 }
 
 #widgets .crypto .description {
-  font-size: 1vh;
+  font-size: 1.2vh;
   color: #848e9c;
   text-align: right;
 }
 
 #widgets .crypto .row-2 {
-  font-size: 1.1vh;
+  font-size: 1.2vh;
   white-space: nowrap;
 }
 
@@ -329,54 +322,9 @@ body {
 }
 
 #mini-logo .name {
-  display: flex;
-}
-
-#mini-logo .name * {
-  font-family: "Playfair Display SC", monospace;
+  font-family: "Playfair Display SC";
   font-size: 1.4rem;
   font-weight: lighter;
-}
-
-#mini-logo .R, .d {
-  display: flex;
-  justify-content: center;
-}
-
-@keyframes rContainerScaling {
-  0% {
-    width: var(--scalingBigWidth);
-  }
-  100% {
-    width: var(--scalingSmallWidth);
-  }
-}
-
-@keyframes dContainerScaling {
-  0% {
-    width: var(--scalingSmallWidth);
-  }
-  100% {
-    width: var(--scalingBigWidth);
-  }
-}
-
-@keyframes rScaling {
-  0% {
-    transform: scaleX(var(--scalingBigRatio));
-  }
-  100% {
-    transform: scaleX(var(--scalingSmallRatio));
-  }
-}
-
-@keyframes dScaling {
-  0% {
-    transform: scaleX(var(--scalingSmallRatio));
-  }
-  100% {
-    transform: scaleX(var(--scalingBigRatio));
-  }
 }
 
 @keyframes hobbiesAnimation {
