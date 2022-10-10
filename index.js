@@ -277,7 +277,7 @@ function roundToOddNumber(value) {
 function formatCryptoNumber(number, {
   hasDollarSign = true,
   alwaysShowSign = false,
-  fractionDigits = 3,
+  fractionDigits = 2,
 } = {}) {
   const formatter = new Intl.NumberFormat('en-US', {
     style: hasDollarSign ? 'currency' : undefined,
@@ -290,7 +290,7 @@ function formatCryptoNumber(number, {
 }
 
 // LOGIC
-function makeCellAnimation(row, col, distance, triggeredByCode) {
+function makeCellAnimation(row, col, distance, triggeredByCode, transparentMode) {
   if (row < 0 || row >= rows) {
     return;
   }
@@ -301,7 +301,9 @@ function makeCellAnimation(row, col, distance, triggeredByCode) {
     return;
   }
   const cell = cells[row][col];
-  makeAnimation(cell, 'cell-touch');
+  cell.classList.remove('cell-touch-transparent');
+  cell.classList.remove('cell-touch');
+  makeAnimation(cell, transparentMode ? 'cell-touch-transparent' : 'cell-touch');
   if (triggeredByCode) {
     return;
   }
@@ -385,8 +387,8 @@ function startDotGame() {
   }, TIME_BETWEEN_DOT_GENERATE);
 }
 
-function onCellTouch(row, col, triggeredByCode = false) {
-  makeCellAnimation(row, col, 0, triggeredByCode);
+function onCellTouch(row, col, triggeredByCode = false, transparentMode = false) {
+  makeCellAnimation(row, col, 0, triggeredByCode, transparentMode);
   // wave effect, similar to how bfs works
   const maxDistance = rows + cols;
   for (let distance = 1; distance <= maxDistance; distance++) {
@@ -399,24 +401,28 @@ function onCellTouch(row, col, triggeredByCode = false) {
           col + k,
           distance,
           triggeredByCode,
+          transparentMode,
         );
         makeCellAnimation(
           row + k,
           col + distance - k,
           distance,
           triggeredByCode,
+          transparentMode,
         );
         makeCellAnimation(
           row + distance - k,
           col - k,
           distance,
           triggeredByCode,
+          transparentMode,
         );
         makeCellAnimation(
           row - k,
           col - distance + k,
           distance,
           triggeredByCode,
+          transparentMode,
         );
       }
     }, delay);
@@ -807,11 +813,11 @@ function updatePriceTracking(element, {
     const row2 = element.querySelector('.column-2 .row-2');
     const priceChangeStr = formatCryptoNumber(
       priceChange,
-      { hasDollarSign: false, fractionDigits: 2 },
+      { hasDollarSign: false },
     );
     const priceChangePercentStr = formatCryptoNumber(
       priceChangePercent,
-      { hasDollarSign: false, alwaysShowSign: true, fractionDigits: 2 },
+      { hasDollarSign: false, alwaysShowSign: true },
     );
     const str = `${priceChangeStr} ${priceChangePercentStr}%`;
     const color = priceChange >= 0 ? '#0ecb83' : '#f6465d';
@@ -913,6 +919,8 @@ async function init() {
   alertText.style.opacity = '1';
   const loadingScreen = document.getElementById('loading');
   addUniversalSensitiveClickListener(loadingScreen, async () => {
+    // first touching to trigger browser optimization on mobile
+    onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true, true);
     const mainContainerSizeAfterScaling = (appHeight
       * (isMobileDevice() ? MAIN_CONTENT_SIZE_MOBILE : MAIN_CONTENT_SIZE))
       / 100;
