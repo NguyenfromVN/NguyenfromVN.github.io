@@ -180,6 +180,51 @@ body {
   z-index: 1;
 }
 
+#widgets .weather .main-temp,
+#widgets .weather .minmax-temp {
+  display: flex;
+}
+
+#widgets .weather .middle-char {
+  flex-grow: 1;
+  text-align: center;
+}
+
+#widgets .weather .min {
+  color: #8ab7ff;
+}
+
+#widgets .weather .max {
+  color: #ff9a78;
+}
+
+#widgets .weather * {
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+#widgets .weather .main-temp {
+  font-size: 1.6vh;
+}
+
+#widgets .weather .minmax-temp {
+  font-size: 1.1vh;
+}
+
+#widgets .weather .weather-description,
+#widgets .weather .location {
+  text-align: right;
+  white-space: nowrap;
+}
+
+#widgets .weather .weather-description {
+  font-size: 1.2vh;
+}
+
+#widgets .weather .location {
+  font-size: 1.4vh;
+  color: #dddddd;
+}
+
 /* TRACK INFO */
 
 #track-info {
@@ -395,7 +440,6 @@ body {
 @keyframes cellTouchTransparent {
   0% {
     background-color: rgba(255, 255, 255, 0.01);
-    opacity: 0.01;
   }
   100% {
     background-color: transparent;
@@ -441,10 +485,10 @@ body {
 }
 
 #start-alert {
+  opacity: 0;
   position: absolute;
   top: 80vh;
   width: 100%;
-  opacity: 0;
   transition: opacity 0.5s;
 }
 

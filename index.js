@@ -198,6 +198,11 @@ let lastPongMessageTime = 0;
 let lastBTCPrice = null;
 let lastETHPrice = null;
 let lastMessageTime = 0;
+const weatherAppIds = [];
+const weatherInfo = {};
+// Marina Bay coordinates
+let lat = 1.2878;
+let long = 103.8666;
 
 // UTILS
 function square(number) {
@@ -247,14 +252,14 @@ function sleep(time) {
   });
 }
 
-function addUniversalSensitiveClickListener(element, handler) {
+function addUniversalSensitiveClickListener(element, handler, options = {}) {
   // for mobile
   element.addEventListener('touchstart', (event) => {
     if (!isMobileDevice()) {
       return;
     }
     handler(event);
-  });
+  }, options);
   // for PC
   element.addEventListener('mousedown', (event) => {
     if (isMobileDevice()) {
@@ -265,7 +270,7 @@ function addUniversalSensitiveClickListener(element, handler) {
       return;
     }
     handler(event);
-  });
+  }, options);
 }
 
 function roundToOddNumber(value) {
@@ -287,6 +292,16 @@ function formatCryptoNumber(number, {
     maximumFractionDigits: fractionDigits,
   });
   return formatter.format(number);
+}
+
+function shuffleArray(arr = []) {
+  const sz = arr.length;
+  for (let i = 0; i < sz; i++) {
+    const newIndex = getRandom(0, sz - 1);
+    const temp = arr[i];
+    arr[i] = arr[newIndex];
+    arr[newIndex] = temp;
+  }
 }
 
 // LOGIC
@@ -453,15 +468,7 @@ const loadSingleTrack = ({ path, name, artist }) => new Promise((resolve) => {
 });
 
 const loadTracks = () => new Promise((resolve) => {
-  // shuffle tracks array
-  const tracksCount = TRACKS.length;
-  for (let i = 0; i < tracksCount; i++) {
-    const newIndex = getRandom(0, tracksCount - 1);
-    // swap 2 tracks
-    const temp = TRACKS[i];
-    TRACKS[i] = TRACKS[newIndex];
-    TRACKS[newIndex] = temp;
-  }
+  shuffleArray(TRACKS);
   // load first track
   loadSingleTrack(TRACKS[0]).then(resolve);
   // load next tracks
@@ -469,7 +476,7 @@ const loadTracks = () => new Promise((resolve) => {
     if (trackBuffer !== null) {
       return;
     }
-    currentTrackIndex = (currentTrackIndex + 1) % tracksCount;
+    currentTrackIndex = (currentTrackIndex + 1) % TRACKS.length;
     loadSingleTrack(TRACKS[currentTrackIndex]);
   }, 30000);
 });
@@ -491,7 +498,7 @@ function addSpanToTrackInfo(content, fontSize, trackInfoContainer) {
   // deco pattern
   const decoPattern = document.createElement('img');
   const padding = span.offsetHeight / 8;
-  decoPattern.src = './images/deco.png#nguyen';
+  decoPattern.src = './images/deco.png?k=b70b6a44328a84b96708b88e2d135b9d';
   decoPattern.style.height = `${span.offsetHeight}px`;
   decoPattern.style.marginLeft = `${padding}px`;
   decoPattern.style.marginRight = `${padding}px`;
@@ -901,6 +908,83 @@ function startCryptoPriceTracking() {
   }, 10000);
 }
 
+function getWeatherDescription(description, weatherId) {
+  let result = description;
+  function check(start, end, value) {
+    if (weatherId >= start && weatherId <= end) {
+      result = value;
+    }
+  }
+  check(200, 202, 'thunderstorm & rain');
+  check(230, 232, 'thunderstorm & drizzle');
+  check(310, 312, 'drizzle rain');
+  check(313, 314, 'shower rain & drizzle');
+  check(520, 522, 'shower rain');
+  if (weatherId >= 801) {
+    result = description.split(':')[0];
+  }
+  return result;
+}
+
+async function getWeatherInfo() {
+  Array.from(document.getElementsByTagName('img')).forEach(({ src: str }) => {
+    weatherAppIds.push(str.split('=')[1]);
+  });
+  shuffleArray(weatherAppIds);
+  for (let i = 0; i < weatherAppIds.length; i++) {
+    const appId = weatherAppIds[i];
+    try {
+      const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${long}&appid=${appId}&units=metric`);
+      const data = await response.json();
+      const {
+        main: { temp, temp_min: minTemp, temp_max: maxTemp },
+        name: city, sys: { country }, weather,
+      } = data;
+      Object.assign(weatherInfo, {
+        temp,
+        minTemp,
+        maxTemp,
+        city,
+        country,
+        description: getWeatherDescription(weather[0].description, weather[0].id),
+      });
+      break;
+    } catch (_) {
+      // try to make another call if applicable
+    }
+  }
+}
+
+async function startWeatherWidget() {
+  await getWeatherInfo();
+  const {
+    temp: _temp, minTemp: _minTemp, maxTemp: _maxTemp, city, country, description,
+  } = weatherInfo;
+  const temp = Math.round(_temp);
+  const minTemp = Math.round(_minTemp);
+  const maxTemp = Math.round(_maxTemp);
+  const mainTempElement = document.querySelector('#widgets .weather .main-temp div');
+  const minTempElement = document.querySelector('#widgets .weather .min');
+  const maxTempElement = document.querySelector('#widgets .weather .max');
+  const locationElement = document.querySelector('#widgets .weather .location');
+  const descriptionElement = document.querySelector('#widgets .weather .weather-description');
+  mainTempElement.textContent = temp;
+  minTempElement.textContent = `${minTemp}°`;
+  maxTempElement.textContent = `${maxTemp}°`;
+  locationElement.textContent = `${city}, ${country}`;
+  descriptionElement.textContent = description;
+}
+
+function requireGeoInfo() {
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition((position) => {
+      lat = position.coords.latitude;
+      long = position.coords.longitude;
+      resolve();
+    }, resolve);
+  });
+}
+
 // INIT FUNCTION
 async function init() {
   const appWidth = AppContainer.offsetWidth;
@@ -919,6 +1003,8 @@ async function init() {
   alertText.style.opacity = '1';
   const loadingScreen = document.getElementById('loading');
   addUniversalSensitiveClickListener(loadingScreen, async () => {
+    await requireGeoInfo();
+    startWeatherWidget();
     // first touching to trigger browser optimization on mobile
     onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true, true);
     const mainContainerSizeAfterScaling = (appHeight
@@ -940,7 +1026,7 @@ async function init() {
       showMiniLogo();
       showWidgets();
     }, 1013);
-  });
+  }, { once: true });
 }
 
 // APP INIT
