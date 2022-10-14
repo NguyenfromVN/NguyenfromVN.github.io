@@ -17,6 +17,7 @@
         "no-mixed-operators": "off",
         "default-case": "off",
         "no-await-in-loop": "warn",
-        "prefer-destructuring": "off"
+        "prefer-destructuring": "off",
+        "no-inner-declarations": "off"
     }
 }

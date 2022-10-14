@@ -3,6 +3,7 @@ const CELLS_PER_ROW = 25;
 const CELLS_PER_ROW_MOBILE = 13;
 const PROPAGATION_DELAY = 31;
 const CELL_TOUCH_ANIMATION_LENGTH = 500;
+const CELL_TOUCH_ANIMATION_FPS = 24;
 const DISTANCE_OF_DESTRUCTION = 3;
 const TIME_BETWEEN_DOT_GENERATE = 8000;
 const MIN_DOT_SIZE = 6; // relative size in percentage
@@ -186,6 +187,7 @@ const AppContainer = document.getElementById('app');
 const btcPriceTrackingContainer = document.querySelector('#widgets .btc-tracking');
 const ethPriceTrackingContainer = document.querySelector('#widgets .eth-tracking');
 const cells = [];
+const intervalIds = [];
 const isCellExisted = [];
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let currentTrackIndex = 0;
@@ -316,9 +318,22 @@ function makeCellAnimation(row, col, distance, triggeredByCode, transparentMode)
     return;
   }
   const cell = cells[row][col];
-  cell.classList.remove('cell-touch-transparent');
-  cell.classList.remove('cell-touch');
-  makeAnimation(cell, transparentMode ? 'cell-touch-transparent' : 'cell-touch');
+  clearInterval(intervalIds[row][col]);
+  const startOpacity = transparentMode ? 0.02 : 0.4;
+  const delta = startOpacity / CELL_TOUCH_ANIMATION_FPS / CELL_TOUCH_ANIMATION_LENGTH * 1000;
+  let count = 0;
+  const delay = 1000 / CELL_TOUCH_ANIMATION_FPS;
+  // first frame
+  cell.style.backgroundColor = `rgba(255,255,255,${startOpacity})`;
+  // the rest of the frames
+  intervalIds[row][col] = setInterval(() => {
+    count++;
+    const opacity = startOpacity - delta * count;
+    cell.style.backgroundColor = `rgba(255,255,255,${opacity})`;
+    if (count === CELL_TOUCH_ANIMATION_FPS * CELL_TOUCH_ANIMATION_LENGTH / 1000) {
+      clearInterval(intervalIds[row][col]);
+    }
+  }, delay);
   if (triggeredByCode) {
     return;
   }
@@ -668,6 +683,7 @@ function createGridSystem(appWidth, appHeight) {
   for (let i = 0; i < rows; i++) {
     const cellsInRow = [];
     const boolArray = [];
+    const nullArray = [];
     for (let j = 0; j < cols; j++) {
       const cell = document.createElement('div');
       cell.className = 'cell';
@@ -675,9 +691,11 @@ function createGridSystem(appWidth, appHeight) {
       AppContainer.append(cell);
       cellsInRow.push(cell);
       boolArray.push(true);
+      nullArray.push(null);
     }
     cells.push(cellsInRow);
     isCellExisted.push(boolArray);
+    intervalIds.push(nullArray);
   }
 }
 
@@ -957,6 +975,9 @@ async function getWeatherInfo() {
 
 async function startWeatherWidget() {
   await getWeatherInfo();
+  if (Object.keys(weatherInfo).length === 0) {
+    return;
+  }
   const {
     temp: _temp, minTemp: _minTemp, maxTemp: _maxTemp, city, country, description,
   } = weatherInfo;
