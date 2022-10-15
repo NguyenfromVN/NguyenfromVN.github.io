@@ -3,7 +3,7 @@ const CELLS_PER_ROW = 25;
 const CELLS_PER_ROW_MOBILE = 13;
 const PROPAGATION_DELAY = 31;
 const CELL_TOUCH_ANIMATION_LENGTH = 500;
-const CELL_TOUCH_ANIMATION_FPS = 24;
+const CELL_TOUCH_ANIMATION_FPS = 20;
 const DISTANCE_OF_DESTRUCTION = 3;
 const TIME_BETWEEN_DOT_GENERATE = 8000;
 const MIN_DOT_SIZE = 6; // relative size in percentage
@@ -179,6 +179,10 @@ const WS_CRYPTO_SUBSCRIBE_MESSAGE = {
   id: 1,
 };
 const PONG_MESSAGE_TIME_INTERVAL = 5 * 60 * 1000;
+const TOP_CELLS_EFFECT_COLORS = [
+  [0, 255, 255], [255, 0, 255], [255, 255, 0],
+  [255, 255, 255], [255, 127, 0], [255, 0, 127],
+  [127, 255, 0], [0, 255, 127], [127, 0, 255], [0, 127, 255]];
 
 // GLOBAL VARS
 let rows;
@@ -307,7 +311,13 @@ function shuffleArray(arr = []) {
 }
 
 // LOGIC
-function makeCellAnimation(row, col, distance, triggeredByCode, transparentMode) {
+function makeCellAnimation(
+  row,
+  col,
+  {
+    distance, triggeredByCode = false, colorOpacity, color = [255, 255, 255],
+  },
+) {
   if (row < 0 || row >= rows) {
     return;
   }
@@ -319,17 +329,16 @@ function makeCellAnimation(row, col, distance, triggeredByCode, transparentMode)
   }
   const cell = cells[row][col];
   clearInterval(intervalIds[row][col]);
-  const startOpacity = transparentMode ? 0.02 : 0.4;
-  const delta = startOpacity / CELL_TOUCH_ANIMATION_FPS / CELL_TOUCH_ANIMATION_LENGTH * 1000;
+  const delta = colorOpacity / CELL_TOUCH_ANIMATION_FPS / CELL_TOUCH_ANIMATION_LENGTH * 1000;
   let count = 0;
   const delay = 1000 / CELL_TOUCH_ANIMATION_FPS;
   // first frame
-  cell.style.backgroundColor = `rgba(255,255,255,${startOpacity})`;
+  cell.style.backgroundColor = `rgba(${color[0]},${color[1]},${color[2]},${colorOpacity})`;
   // the rest of the frames
   intervalIds[row][col] = setInterval(() => {
     count++;
-    const opacity = startOpacity - delta * count;
-    cell.style.backgroundColor = `rgba(255,255,255,${opacity})`;
+    const opacity = colorOpacity - delta * count;
+    cell.style.backgroundColor = `rgba(${color[0]},${color[1]},${color[2]},${opacity})`;
     if (count === CELL_TOUCH_ANIMATION_FPS * CELL_TOUCH_ANIMATION_LENGTH / 1000) {
       clearInterval(intervalIds[row][col]);
     }
@@ -388,6 +397,32 @@ function startSignatureNeonEffect() {
   makeEffect();
 }
 
+function topCellsEffect() {
+  const colorsLength = TOP_CELLS_EFFECT_COLORS.length;
+  const propagationDelay = PROPAGATION_DELAY * 0.5;
+  const commonOptions = {
+    triggeredByCode: true,
+    colorOpacity: 0.7,
+  };
+  makeCellAnimation(0, Math.floor(cols / 2), {
+    color: TOP_CELLS_EFFECT_COLORS[getRandom(0, colorsLength - 1)],
+    ...commonOptions,
+  });
+  for (let distance = 1; distance <= Math.floor(cols / 2); distance++) {
+    const delay = distance * propagationDelay;
+    setTimeout(() => {
+      makeCellAnimation(0, Math.floor(cols / 2) - distance, {
+        color: TOP_CELLS_EFFECT_COLORS[getRandom(0, colorsLength - 1)],
+        ...commonOptions,
+      });
+      makeCellAnimation(0, Math.floor(cols / 2) + distance, {
+        color: TOP_CELLS_EFFECT_COLORS[getRandom(0, colorsLength - 1)],
+        ...commonOptions,
+      });
+    }, delay);
+  }
+}
+
 function startDotGame() {
   setInterval(() => {
     // skip generating when the tab is out of focus
@@ -400,11 +435,12 @@ function startDotGame() {
     const minDotSize = isMobileDevice() ? MIN_DOT_SIZE_MOBILE : MIN_DOT_SIZE;
     const maxDotSize = isMobileDevice() ? MAX_DOT_SIZE_MOBILE : MAX_DOT_SIZE;
     const dotSize = (getRandom(minDotSize, maxDotSize) / 100) * appWidth;
-    const top = getRandom(appHeight / 20, appHeight / 10);
+    const top = getRandom(appHeight / rows, appHeight / 8);
     const left = getRandom(0, appWidth - dotSize);
     const dot = createDot(dotSize, top, left);
     addUniversalSensitiveClickListener(dot, () => {
       dot.remove();
+      topCellsEffect();
     });
     AppContainer.append(dot);
     makeAnimation(dot, 'dot');
@@ -418,42 +454,23 @@ function startDotGame() {
 }
 
 function onCellTouch(row, col, triggeredByCode = false, transparentMode = false) {
-  makeCellAnimation(row, col, 0, triggeredByCode, transparentMode);
+  const options = {
+    triggeredByCode,
+    colorOpacity: transparentMode ? 0.02 : 0.4,
+  };
+  makeCellAnimation(row, col, { distance: 0, ...options });
   // wave effect, similar to how bfs works
   const maxDistance = rows + cols;
   for (let distance = 1; distance <= maxDistance; distance++) {
     const delay = PROPAGATION_DELAY * distance;
+    const commonOptions = { distance, ...options };
     setTimeout(() => {
       // create the ring
       for (let k = 0; k < distance; k++) {
-        makeCellAnimation(
-          row - distance + k,
-          col + k,
-          distance,
-          triggeredByCode,
-          transparentMode,
-        );
-        makeCellAnimation(
-          row + k,
-          col + distance - k,
-          distance,
-          triggeredByCode,
-          transparentMode,
-        );
-        makeCellAnimation(
-          row + distance - k,
-          col - k,
-          distance,
-          triggeredByCode,
-          transparentMode,
-        );
-        makeCellAnimation(
-          row - k,
-          col - distance + k,
-          distance,
-          triggeredByCode,
-          transparentMode,
-        );
+        makeCellAnimation(row - distance + k, col + k, commonOptions);
+        makeCellAnimation(row + k, col + distance - k, commonOptions);
+        makeCellAnimation(row + distance - k, col - k, commonOptions);
+        makeCellAnimation(row - k, col - distance + k, commonOptions);
       }
     }, delay);
   }
@@ -852,7 +869,7 @@ function updatePriceTracking(element, {
 }
 
 function sendPongMessage() {
-  const currentTime = new Date().getTime();
+  const currentTime = getTime();
   const diff = currentTime - lastPongMessageTime;
   if (diff >= PONG_MESSAGE_TIME_INTERVAL) {
     wsInstance.send(JSON.stringify({ ...WS_CRYPTO_SUBSCRIBE_MESSAGE, id: wsEventID }));
@@ -903,7 +920,7 @@ function createWSConnection() {
     },
   };
   wsInstance.addEventListener('message', ({ data: message }) => {
-    lastMessageTime = new Date().getTime();
+    lastMessageTime = getTime();
     const { data = {}, stream = 'unhandled_stream' } = JSON.parse(message);
     const price = Number(data.p);
     const priceChangePercent = Number(data.P);
@@ -1041,11 +1058,11 @@ async function init() {
     prepareTrackInfoLayout(appWidth, appHeight, mainContainerSizeAfterScaling);
     await sleep(8000);
     startMusic();
-    startSignatureNeonEffect();
     // delay to avoid heavy load
     setTimeout(() => {
       showMiniLogo();
       showWidgets();
+      startSignatureNeonEffect();
     }, 1013);
   }, { once: true });
 }
