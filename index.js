@@ -399,7 +399,7 @@ function startSignatureNeonEffect() {
 
 function topCellsEffect() {
   const colorsLength = TOP_CELLS_EFFECT_COLORS.length;
-  const propagationDelay = PROPAGATION_DELAY * 0.5;
+  const propagationDelay = PROPAGATION_DELAY * 0.6 * (isMobileDevice() ? 2 : 1);
   const commonOptions = {
     triggeredByCode: true,
     colorOpacity: 0.7,
