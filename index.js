@@ -29,7 +29,11 @@ const TRACKS = [
     name: 'The Other Side Of Paradise',
     artist: 'Glass Animals',
   },
-  { path: './tracks/4.hex', name: 'Loverboy', artist: 'A-Wall' },
+  {
+    path: './tracks/4.hex',
+    name: 'Loverboy',
+    artist: 'A-Wall',
+  },
   {
     path: './tracks/5.hex',
     name: '50 Feet',
@@ -155,6 +159,136 @@ const TRACKS = [
     name: "I Ain't Worried",
     artist: 'OneRepublic',
   },
+  {
+    path: './tracks/30.hex',
+    name: 'Show Me Your Back',
+    artist: 'FindMyName',
+  },
+  {
+    path: './tracks/31.hex',
+    name: 'BILLIE EILISH',
+    artist: 'Armani White',
+  },
+  {
+    path: './tracks/32.hex',
+    name: 'Feel Good',
+    artist: 'Tundra Beats',
+  },
+  {
+    path: './tracks/33.hex',
+    name: 'In My Mind',
+    artist: "Dynoro & Gigi D'Agostino",
+  },
+  {
+    path: './tracks/34.hex',
+    name: 'prolly my spookiest beat',
+    artist: 'prodby668',
+  },
+  {
+    path: './tracks/35.hex',
+    name: 'Theme of Kage',
+    artist: 'SonHisako',
+  },
+  {
+    path: './tracks/36.hex',
+    name: 'Levitating',
+    artist: 'Dua Lipa, DaBaby',
+  },
+  {
+    path: './tracks/37.hex',
+    name: 'Wait a Minute!',
+    artist: 'Willow Smith',
+  },
+  {
+    path: './tracks/38.hex',
+    name: 'Drink A Yak',
+    artist: 'Jidanofu',
+  },
+  {
+    path: './tracks/39.hex',
+    name: 'Call me',
+    artist: '90sFlav',
+  },
+  {
+    path: './tracks/40.hex',
+    name: 'oui',
+    artist: 'Jeremih',
+  },
+  {
+    path: './tracks/41.hex',
+    name: 'Dancin (KRONO Remix)',
+    artist: 'Aaron Smith',
+  },
+  {
+    path: './tracks/42.hex',
+    name: 'Build a Bitch',
+    artist: 'Bella Poarch',
+  },
+  {
+    path: './tracks/43.hex',
+    name: 'Here (Lucian Remix)',
+    artist: 'Alessia Cara',
+  },
+  {
+    path: './tracks/44.hex',
+    name: 'Babel',
+    artist: 'Gustavo Bravetti',
+  },
+  {
+    path: './tracks/45.hex',
+    name: 'Ambition For Cash',
+    artist: 'Key Glock',
+  },
+  {
+    path: './tracks/46.hex',
+    name: 'Body Language (Sick Mix)',
+    artist: 'Sickick',
+  },
+  {
+    path: './tracks/47.hex',
+    name: 'this is what falling in love feels like',
+    artist: 'JVKE',
+  },
+  {
+    path: './tracks/48.hex',
+    name: 'In The Name Of Love',
+    artist: 'Martin Garrix & Bebe Rexha',
+  },
+  {
+    path: './tracks/49.hex',
+    name: 'One Kiss x I Was Never There',
+    artist: 'Ian Asher',
+  },
+  {
+    path: './tracks/50.hex',
+    name: 'Lana Del Rey x Coolio',
+    artist: 'Sickick',
+  },
+  {
+    path: './tracks/51.hex',
+    name: 'Into Your Arms (Melody + No Rap)',
+    artist: 'Witt Lowry ft Ava Max',
+  },
+  {
+    path: './tracks/52.hex',
+    name: 'RAGE w/ Lukrative',
+    artist: 'paaus',
+  },
+  {
+    path: './tracks/53.hex',
+    name: 'falling down',
+    artist: 'théos',
+  },
+  {
+    path: './tracks/54.hex',
+    name: 'Life Goes On',
+    artist: 'Oliver Tree',
+  },
+  {
+    path: './tracks/55.hex',
+    name: 'Treasure',
+    artist: 'Bruno Mars',
+  },
 ];
 const LOADING_FADE_OUT_TIME = 1000;
 const MIN_LOADING_TIME = 4000;
@@ -209,6 +343,9 @@ const weatherInfo = {};
 // Marina Bay coordinates
 let lat = 1.2878;
 let long = 103.8666;
+const pageLoadPromise = new Promise((resolve) => {
+  window.addEventListener('load', resolve);
+});
 
 // UTILS
 function square(number) {
@@ -1038,6 +1175,7 @@ async function init() {
   if (currentTime - startTime < MIN_LOADING_TIME) {
     await sleep(MIN_LOADING_TIME - (currentTime - startTime));
   }
+  await pageLoadPromise;
   // show alert
   const alertText = document.getElementById('start-alert');
   alertText.style.opacity = '1';

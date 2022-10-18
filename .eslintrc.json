@@ -18,6 +18,7 @@
         "default-case": "off",
         "no-await-in-loop": "warn",
         "prefer-destructuring": "off",
-        "no-inner-declarations": "off"
+        "no-inner-declarations": "off",
+        "linebreak-style": "off"
     }
 }
