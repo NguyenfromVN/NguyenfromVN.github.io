@@ -399,10 +399,11 @@ function startSignatureNeonEffect() {
 
 function topCellsEffect() {
   const colorsLength = TOP_CELLS_EFFECT_COLORS.length;
-  const propagationDelay = PROPAGATION_DELAY * 0.6 * (isMobileDevice() ? 2 : 1);
+  const isMobile = isMobileDevice();
+  const propagationDelay = PROPAGATION_DELAY * 0.6 * (isMobile ? 1.5 : 1);
   const commonOptions = {
     triggeredByCode: true,
-    colorOpacity: 0.7,
+    colorOpacity: isMobile ? 0.9 : 0.7,
   };
   makeCellAnimation(0, Math.floor(cols / 2), {
     color: TOP_CELLS_EFFECT_COLORS[getRandom(0, colorsLength - 1)],
@@ -432,8 +433,9 @@ function startDotGame() {
     // generate dot
     const appWidth = AppContainer.offsetWidth;
     const appHeight = AppContainer.offsetHeight;
-    const minDotSize = isMobileDevice() ? MIN_DOT_SIZE_MOBILE : MIN_DOT_SIZE;
-    const maxDotSize = isMobileDevice() ? MAX_DOT_SIZE_MOBILE : MAX_DOT_SIZE;
+    const isMobile = isMobileDevice();
+    const minDotSize = isMobile ? MIN_DOT_SIZE_MOBILE : MIN_DOT_SIZE;
+    const maxDotSize = isMobile ? MAX_DOT_SIZE_MOBILE : MAX_DOT_SIZE;
     const dotSize = (getRandom(minDotSize, maxDotSize) / 100) * appWidth;
     const top = getRandom(appHeight / rows, appHeight / 8);
     const left = getRandom(0, appWidth - dotSize);
@@ -1043,8 +1045,6 @@ async function init() {
   addUniversalSensitiveClickListener(loadingScreen, async () => {
     await requireGeoInfo();
     startWeatherWidget();
-    // first touching to trigger browser optimization on mobile
-    onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true, true);
     const mainContainerSizeAfterScaling = (appHeight
       * (isMobileDevice() ? MAIN_CONTENT_SIZE_MOBILE : MAIN_CONTENT_SIZE))
       / 100;
