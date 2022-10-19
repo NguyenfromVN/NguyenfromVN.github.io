@@ -13,283 +13,6 @@ const MAX_DOT_SIZE_MOBILE = 25;
 const DOT_ANIMATION_LENGTH = 1000;
 const MAX_DOTS = 3;
 const MAX_DOT_EXISTING_TIME = MAX_DOTS * TIME_BETWEEN_DOT_GENERATE;
-const TRACKS = [
-  {
-    path: './tracks/1.hex',
-    name: 'Devil Eyes',
-    artist: 'Hippie Sabotage',
-  },
-  {
-    path: './tracks/2.hex',
-    name: 'Heartbreak Anniversary',
-    artist: 'Giveon',
-  },
-  {
-    path: './tracks/3.hex',
-    name: 'The Other Side Of Paradise',
-    artist: 'Glass Animals',
-  },
-  {
-    path: './tracks/4.hex',
-    name: 'Loverboy',
-    artist: 'A-Wall',
-  },
-  {
-    path: './tracks/5.hex',
-    name: '50 Feet',
-    artist: 'SoMo',
-  },
-  {
-    path: './tracks/6.hex',
-    name: 'Can We Kiss Forever',
-    artist: 'Kina',
-  },
-  {
-    path: './tracks/7.hex',
-    name: 'Fashion Week',
-    artist: 'Blackbear',
-  },
-  {
-    path: './tracks/8.hex',
-    name: 'Gang Shit No Lame Shit',
-    artist: 'Key Glock',
-  },
-  {
-    path: './tracks/9.hex',
-    name: 'Goodbyes',
-    artist: 'Post Malone',
-  },
-  {
-    path: './tracks/10.hex',
-    name: 'Gravity',
-    artist: 'Umpire',
-  },
-  {
-    path: './tracks/11.hex',
-    name: "I'm Not The Only One",
-    artist: 'Sam Smith',
-  },
-  {
-    path: './tracks/12.hex',
-    name: 'in luv with u',
-    artist: 'pxzvc',
-  },
-  {
-    path: './tracks/13.hex',
-    name: 'Industry Baby',
-    artist: 'Lil Nas X',
-  },
-  {
-    path: './tracks/14.hex',
-    name: 'Infinite',
-    artist: 'Valence',
-  },
-  {
-    path: './tracks/15.hex',
-    name: 'Life Is Over',
-    artist: 'Anikdote',
-  },
-  {
-    path: './tracks/16.hex',
-    name: 'Mine',
-    artist: 'Bazzi',
-  },
-  {
-    path: './tracks/17.hex',
-    name: 'No Stylist',
-    artist: 'French Montana & Drake',
-  },
-  {
-    path: './tracks/18.hex',
-    name: 'Ocean Eyes',
-    artist: 'Billie Eilish',
-  },
-  {
-    path: './tracks/19.hex',
-    name: 'One More Night',
-    artist: 'Maroon 5',
-  },
-  {
-    path: './tracks/20.hex',
-    name: 'Perfect Time',
-    artist: 'Toby Tranter',
-  },
-  {
-    path: './tracks/21.hex',
-    name: 'Roses',
-    artist: 'The Chainsmokers',
-  },
-  {
-    path: './tracks/22.hex',
-    name: 'Run Away With Me',
-    artist: 'Carly Rae Jepsen',
-  },
-  {
-    path: './tracks/23.hex',
-    name: 'Save Your Tears',
-    artist: 'The Weeknd',
-  },
-  {
-    path: './tracks/24.hex',
-    name: 'Stay',
-    artist: 'The Kid LAROI, Justin Bieber',
-  },
-  {
-    path: './tracks/25.hex',
-    name: 'Still D.R.E.',
-    artist: 'Dr. Dre',
-  },
-  {
-    path: './tracks/26.hex',
-    name: 'Wasted',
-    artist: 'Jerry Purpdrank',
-  },
-  {
-    path: './tracks/27.hex',
-    name: 'White Gold',
-    artist: 'Tommy Ljungberg',
-  },
-  {
-    path: './tracks/28.hex',
-    name: 'Why We Lose',
-    artist: 'Cartoon',
-  },
-  {
-    path: './tracks/29.hex',
-    name: "I Ain't Worried",
-    artist: 'OneRepublic',
-  },
-  {
-    path: './tracks/30.hex',
-    name: 'Show Me Your Back',
-    artist: 'FindMyName',
-  },
-  {
-    path: './tracks/31.hex',
-    name: 'BILLIE EILISH',
-    artist: 'Armani White',
-  },
-  {
-    path: './tracks/32.hex',
-    name: 'Feel Good',
-    artist: 'Tundra Beats',
-  },
-  {
-    path: './tracks/33.hex',
-    name: 'In My Mind',
-    artist: "Dynoro & Gigi D'Agostino",
-  },
-  {
-    path: './tracks/34.hex',
-    name: 'prolly my spookiest beat',
-    artist: 'prodby668',
-  },
-  {
-    path: './tracks/35.hex',
-    name: 'Theme of Kage',
-    artist: 'SonHisako',
-  },
-  {
-    path: './tracks/36.hex',
-    name: 'Levitating',
-    artist: 'Dua Lipa, DaBaby',
-  },
-  {
-    path: './tracks/37.hex',
-    name: 'Wait a Minute!',
-    artist: 'Willow Smith',
-  },
-  {
-    path: './tracks/38.hex',
-    name: 'Drink A Yak',
-    artist: 'Jidanofu',
-  },
-  {
-    path: './tracks/39.hex',
-    name: 'Call me',
-    artist: '90sFlav',
-  },
-  {
-    path: './tracks/40.hex',
-    name: 'oui',
-    artist: 'Jeremih',
-  },
-  {
-    path: './tracks/41.hex',
-    name: 'Dancin (KRONO Remix)',
-    artist: 'Aaron Smith',
-  },
-  {
-    path: './tracks/42.hex',
-    name: 'Build a Bitch',
-    artist: 'Bella Poarch',
-  },
-  {
-    path: './tracks/43.hex',
-    name: 'Here (Lucian Remix)',
-    artist: 'Alessia Cara',
-  },
-  {
-    path: './tracks/44.hex',
-    name: 'Babel',
-    artist: 'Gustavo Bravetti',
-  },
-  {
-    path: './tracks/45.hex',
-    name: 'Ambition For Cash',
-    artist: 'Key Glock',
-  },
-  {
-    path: './tracks/46.hex',
-    name: 'Body Language (Sick Mix)',
-    artist: 'Sickick',
-  },
-  {
-    path: './tracks/47.hex',
-    name: 'this is what falling in love feels like',
-    artist: 'JVKE',
-  },
-  {
-    path: './tracks/48.hex',
-    name: 'In The Name Of Love',
-    artist: 'Martin Garrix & Bebe Rexha',
-  },
-  {
-    path: './tracks/49.hex',
-    name: 'One Kiss x I Was Never There',
-    artist: 'Ian Asher',
-  },
-  {
-    path: './tracks/50.hex',
-    name: 'Lana Del Rey x Coolio',
-    artist: 'Sickick',
-  },
-  {
-    path: './tracks/51.hex',
-    name: 'Into Your Arms (Melody + No Rap)',
-    artist: 'Witt Lowry ft Ava Max',
-  },
-  {
-    path: './tracks/52.hex',
-    name: 'RAGE w/ Lukrative',
-    artist: 'paaus',
-  },
-  {
-    path: './tracks/53.hex',
-    name: 'falling down',
-    artist: 'théos',
-  },
-  {
-    path: './tracks/54.hex',
-    name: 'Life Goes On',
-    artist: 'Oliver Tree',
-  },
-  {
-    path: './tracks/55.hex',
-    name: 'Treasure',
-    artist: 'Bruno Mars',
-  },
-];
 const LOADING_FADE_OUT_TIME = 1000;
 const MIN_LOADING_TIME = 4000;
 const MAIN_CONTENT_SIZE = 20; // relative size in percentage
@@ -338,7 +61,6 @@ let lastPongMessageTime = 0;
 let lastBTCPrice = null;
 let lastETHPrice = null;
 let lastMessageTime = 0;
-const weatherAppIds = [];
 const weatherInfo = {};
 // Marina Bay coordinates
 let lat = 1.2878;
@@ -445,6 +167,20 @@ function shuffleArray(arr = []) {
     arr[i] = arr[newIndex];
     arr[newIndex] = temp;
   }
+}
+
+function getDataFromClass(className) {
+  const element = document.querySelector(`.${className}`);
+  let str = '';
+  for (let i = 0; ; i++) {
+    const s = getComputedStyle(element).getPropertyValue(`--prop${i}`);
+    if (!s) {
+      break;
+    }
+    str += s;
+  }
+  element.remove();
+  return JSON.parse(window.atob(str));
 }
 
 // LOGIC
@@ -639,16 +375,17 @@ const loadSingleTrack = ({ path, name, artist }) => new Promise((resolve) => {
 });
 
 const loadTracks = () => new Promise((resolve) => {
-  shuffleArray(TRACKS);
+  const tracks = getDataFromClass('tracks-info');
+  shuffleArray(tracks);
   // load first track
-  loadSingleTrack(TRACKS[0]).then(resolve);
+  loadSingleTrack(tracks[0]).then(resolve);
   // load next tracks
   setInterval(() => {
     if (trackBuffer !== null) {
       return;
     }
-    currentTrackIndex = (currentTrackIndex + 1) % TRACKS.length;
-    loadSingleTrack(TRACKS[currentTrackIndex]);
+    currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
+    loadSingleTrack(tracks[currentTrackIndex]);
   }, 30000);
 });
 
@@ -669,7 +406,7 @@ function addSpanToTrackInfo(content, fontSize, trackInfoContainer) {
   // deco pattern
   const decoPattern = document.createElement('img');
   const padding = span.offsetHeight / 8;
-  decoPattern.src = './images/deco.png?k=b70b6a44328a84b96708b88e2d135b9d';
+  decoPattern.src = './images/deco.png';
   decoPattern.style.height = `${span.offsetHeight}px`;
   decoPattern.style.marginLeft = `${padding}px`;
   decoPattern.style.marginRight = `${padding}px`;
@@ -1101,9 +838,7 @@ function getWeatherDescription(description, weatherId) {
 }
 
 async function getWeatherInfo() {
-  Array.from(document.getElementsByTagName('img')).forEach(({ src: str }) => {
-    weatherAppIds.push(str.split('=')[1]);
-  });
+  const weatherAppIds = getDataFromClass('weather-app-ids');
   shuffleArray(weatherAppIds);
   for (let i = 0; i < weatherAppIds.length; i++) {
     const appId = weatherAppIds[i];
@@ -1179,6 +914,7 @@ async function init() {
   // show alert
   const alertText = document.getElementById('start-alert');
   alertText.style.opacity = '1';
+  alertText.style.transition = 'opacity 0.5s';
   const loadingScreen = document.getElementById('loading');
   addUniversalSensitiveClickListener(loadingScreen, async () => {
     await requireGeoInfo();
