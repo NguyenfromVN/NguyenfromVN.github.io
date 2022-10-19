@@ -51,10 +51,11 @@ const cells = [];
 const intervalIds = [];
 const isCellExisted = [];
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-let currentTrackIndex = 0;
+let tracks = [];
+let currentTrackIndex = -1;
+let trackBuffer = null;
 const visualizationBars = document.getElementsByClassName('bar');
 let widgetsExpanded = false;
-let trackBuffer = null;
 let wsInstance = null;
 let wsEventID = 3;
 let lastPongMessageTime = 0;
@@ -351,7 +352,8 @@ function onCellTouch(row, col, triggeredByCode = false, transparentMode = false)
   }
 }
 
-const loadSingleTrack = ({ path, name, artist }) => new Promise((resolve) => {
+const loadTrack = (index) => new Promise((resolve) => {
+  const { path, name, artist } = tracks[index];
   const ajaxRequest = new XMLHttpRequest();
   ajaxRequest.open('GET', path, true);
   ajaxRequest.responseType = 'arraybuffer';
@@ -360,6 +362,10 @@ const loadSingleTrack = ({ path, name, artist }) => new Promise((resolve) => {
     audioCtx.decodeAudioData(
       audioData,
       (audioBuffer) => {
+        const nextTrackIndex = (currentTrackIndex + 1) % tracks.length;
+        if (index !== nextTrackIndex) {
+          return;
+        }
         trackBuffer = {
           path,
           name,
@@ -374,20 +380,21 @@ const loadSingleTrack = ({ path, name, artist }) => new Promise((resolve) => {
   ajaxRequest.send();
 });
 
-const loadTracks = () => new Promise((resolve) => {
-  const tracks = getDataFromClass('tracks-info');
+const loadFirstTrack = () => new Promise((resolve) => {
+  tracks = getDataFromClass('tracks-info');
   shuffleArray(tracks);
-  // load first track
-  loadSingleTrack(tracks[0]).then(resolve);
-  // load next tracks
-  setInterval(() => {
+  loadTrack(0).then(resolve);
+});
+
+function prepareTrack(index) {
+  loadTrack(index);
+  return setInterval(() => {
     if (trackBuffer !== null) {
       return;
     }
-    currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
-    loadSingleTrack(tracks[currentTrackIndex]);
+    loadTrack(index);
   }, 30000);
-});
+}
 
 function clearOldSpans(trackInfoContainer) {
   while (trackInfoContainer.lastChild) {
@@ -536,6 +543,7 @@ async function startMusic() {
   }
   const currentTrack = trackBuffer;
   trackBuffer = null;
+  const intervalId = prepareTrack((currentTrackIndex + 1) % tracks.length);
   const analyser = audioCtx.createAnalyser();
   analyser.minDecibels = -90;
   analyser.maxDecibels = -10;
@@ -558,6 +566,8 @@ async function startMusic() {
   await sleep(601);
   const stopTrackInfoHandler = createTrackInfo(currentTrack);
   source.onended = async () => {
+    currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
+    clearInterval(intervalId);
     stopVisualizationHandler();
     stopTrackInfoHandler(true);
     await sleep(1000);
@@ -904,7 +914,8 @@ async function init() {
   const startTime = getTime();
   createGridSystem(appWidth, appHeight);
   startCryptoPriceTracking();
-  await loadTracks();
+  await loadFirstTrack();
+  currentTrackIndex = 0;
   // wait more if loading time is way too fast
   const currentTime = getTime();
   if (currentTime - startTime < MIN_LOADING_TIME) {
