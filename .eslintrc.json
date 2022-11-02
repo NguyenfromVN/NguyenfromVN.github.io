@@ -19,6 +19,7 @@
         "no-await-in-loop": "warn",
         "prefer-destructuring": "off",
         "no-inner-declarations": "off",
-        "linebreak-style": "off"
+        "linebreak-style": "off",
+        "no-underscore-dangle": "off"
     }
 }

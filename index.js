@@ -150,14 +150,33 @@ function formatCryptoNumber(number, {
   alwaysShowSign = false,
   fractionDigits = 2,
 } = {}) {
-  const formatter = new Intl.NumberFormat('en-US', {
-    style: hasDollarSign ? 'currency' : undefined,
-    currency: hasDollarSign ? 'USD' : undefined,
-    signDisplay: alwaysShowSign ? 'always' : undefined,
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits,
-  });
-  return formatter.format(number);
+  const numStr = number.toFixed(fractionDigits);
+  let result = '';
+  if (alwaysShowSign) {
+    result += number >= 0 ? '+' : '-';
+  } else if (number < 0) {
+    result += '-';
+  }
+  if (hasDollarSign) {
+    result += '$';
+  }
+  const integral = `${Math.trunc(Math.abs(number))}`;
+  const integralLen = integral.length;
+  for (let i = 0; i < integralLen; i++) {
+    result += integral[i];
+    if ((i + 1) % 3 === integralLen % 3 && i !== integralLen - 1) {
+      result += ',';
+    }
+  }
+  if (fractionDigits === 0) {
+    return result;
+  }
+  result += '.';
+  const dotPos = numStr.indexOf('.');
+  for (let i = 0; i < fractionDigits; i++) {
+    result += numStr[dotPos + 1 + i];
+  }
+  return result;
 }
 
 function shuffleArray(arr = []) {
@@ -265,7 +284,7 @@ function startSignatureNeonEffect() {
       });
     }
     makeFlickeringEffect([
-      47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 47, 1013, 97, 1013, 97, 1511,
+      73, 73, 73, 73, 73, 73, 73, 73, 73, 73, 73, 73, 1409, 127, 1409, 127, 1801,
     ]);
   }
   makeEffect();
@@ -329,10 +348,17 @@ function startDotGame() {
   }, TIME_BETWEEN_DOT_GENERATE);
 }
 
-function onCellTouch(row, col, triggeredByCode = false, transparentMode = false) {
+function onCellTouch(
+  row,
+  col,
+  triggeredByCode = false,
+  colorOpacity = 0.4,
+  color = [255, 255, 255],
+) {
   const options = {
     triggeredByCode,
-    colorOpacity: transparentMode ? 0.02 : 0.4,
+    colorOpacity,
+    color,
   };
   makeCellAnimation(row, col, { distance: 0, ...options });
   // wave effect, similar to how bfs works
@@ -380,14 +406,16 @@ const loadTrack = (index) => new Promise((resolve) => {
   ajaxRequest.send();
 });
 
-const loadFirstTrack = () => new Promise((resolve) => {
+async function loadFirstTrack() {
   tracks = getDataFromClass('tracks-info');
   shuffleArray(tracks);
-  loadTrack(0).then(resolve);
-});
+  await loadTrack(0);
+  currentTrackIndex = 0;
+}
 
 function prepareTrack(index) {
-  loadTrack(index);
+  // avoid heavy load
+  setTimeout(() => loadTrack(index), 2003);
   return setInterval(() => {
     if (trackBuffer !== null) {
       return;
@@ -510,9 +538,8 @@ function startMusicVisualization(analyser) {
     analyser.getByteFrequencyData(dataArray);
     for (let i = 0; i < visualizationBars.length; i++) {
       const bar = visualizationBars[i];
-      const barWidth = bar.offsetWidth;
       const newWidth = (dataArray[i] / 255) * 3 * diskSize;
-      bar.style.transform = `scaleX(${newWidth / barWidth})`;
+      bar.style.transform = `scaleX(${newWidth / bar._width_})`;
     }
     const dBBass = dataArray[0];
     const dBTreble = dataArray[6];
@@ -537,9 +564,13 @@ function startMusicVisualization(analyser) {
   };
 }
 
-async function startMusic() {
+async function startMusic(fallback = null) {
   if (trackBuffer === null) {
-    return;
+    if (fallback) {
+      trackBuffer = fallback;
+    } else {
+      return;
+    }
   }
   const currentTrack = trackBuffer;
   trackBuffer = null;
@@ -563,7 +594,7 @@ async function startMusic() {
   analyser.fftSize = FFT_SIZE;
   const stopVisualizationHandler = startMusicVisualization(analyser);
   // delay to avoid heavy load
-  await sleep(601);
+  await sleep(1213);
   const stopTrackInfoHandler = createTrackInfo(currentTrack);
   source.onended = async () => {
     currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
@@ -572,7 +603,7 @@ async function startMusic() {
     stopTrackInfoHandler(true);
     await sleep(1000);
     // play next track
-    startMusic();
+    startMusic(currentTrack);
   };
 }
 
@@ -625,13 +656,14 @@ function showMainPanel(mainContainerSizeAfterScaling) {
   // make mask fade after signature's animation is done
   const mask = document.getElementById('mask');
   mask.classList.add('faded-effect');
-  // remove mask after 2s from starting time, to avoid heavy load
-  setTimeout(() => mask.remove(), 10000);
+  // remove mask after 3s from starting time, to avoid heavy load
+  setTimeout(() => mask.remove(), 11000);
   // styling for bars
   for (let i = 0; i < visualizationBars.length; i++) {
     const bar = visualizationBars[i];
-    bar.style.width = `${mainContainerSize * (2 - i / (visualizationBars.length - 1))
-    }px`;
+    const width = mainContainerSize * (2 - i / (visualizationBars.length - 1));
+    bar._width_ = width;
+    bar.style.width = `${width}px`;
     bar.style.transform = 'scaleX(0)';
   }
 }
@@ -915,7 +947,6 @@ async function init() {
   createGridSystem(appWidth, appHeight);
   startCryptoPriceTracking();
   await loadFirstTrack();
-  currentTrackIndex = 0;
   // wait more if loading time is way too fast
   const currentTime = getTime();
   if (currentTime - startTime < MIN_LOADING_TIME) {
