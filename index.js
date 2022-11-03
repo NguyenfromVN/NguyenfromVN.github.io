@@ -633,6 +633,18 @@ function createGridSystem(appWidth, appHeight) {
   }
 }
 
+function resetGrid() {
+  onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true, 0.5, [255, 0, 255]);
+  setTimeout(() => {
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        cells[i][j].style.zIndex = '3';
+        isCellExisted[i][j] = true;
+      }
+    }
+  }, 1013);
+}
+
 function showMainPanel(mainContainerSizeAfterScaling) {
   // styling for the main panel according to the screen size
   const mainContainer = document.getElementById('main');
@@ -652,6 +664,7 @@ function showMainPanel(mainContainerSizeAfterScaling) {
     signatureContainer.style.transform = 'scale(1)';
   }, 5000);
   const diskContainer = document.getElementById('disk');
+  setTimeout(() => addUniversalSensitiveClickListener(diskContainer, resetGrid), 8000);
   diskContainer.classList.add('disk-animation');
   // make mask fade after signature's animation is done
   const mask = document.getElementById('mask');
@@ -889,14 +902,13 @@ async function getWeatherInfo() {
       const data = await response.json();
       const {
         main: { temp, temp_min: minTemp, temp_max: maxTemp },
-        name: city, sys: { country }, weather,
+        name: city, weather,
       } = data;
       Object.assign(weatherInfo, {
         temp,
         minTemp,
         maxTemp,
         city,
-        country,
         description: getWeatherDescription(weather[0].description, weather[0].id),
       });
       break;
@@ -912,7 +924,7 @@ async function startWeatherWidget() {
     return;
   }
   const {
-    temp: _temp, minTemp: _minTemp, maxTemp: _maxTemp, city, country, description,
+    temp: _temp, minTemp: _minTemp, maxTemp: _maxTemp, city, description,
   } = weatherInfo;
   const temp = Math.round(_temp);
   const minTemp = Math.round(_minTemp);
@@ -925,7 +937,7 @@ async function startWeatherWidget() {
   mainTempElement.textContent = temp;
   minTempElement.textContent = `${minTemp}°`;
   maxTempElement.textContent = `${maxTemp}°`;
-  locationElement.textContent = `${city}, ${country}`;
+  locationElement.textContent = `${city}`;
   descriptionElement.textContent = description;
 }
 
