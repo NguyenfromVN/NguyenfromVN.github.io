@@ -20,6 +20,8 @@
         "prefer-destructuring": "off",
         "no-inner-declarations": "off",
         "linebreak-style": "off",
-        "no-underscore-dangle": "off"
+        "no-underscore-dangle": "off",
+        "object-shorthand": "off",
+        "func-names": "off"
     }
 }

@@ -17,7 +17,6 @@ const LOADING_FADE_OUT_TIME = 1000;
 const MIN_LOADING_TIME = 4000;
 const MAIN_CONTENT_SIZE = 20; // relative size in percentage
 const MAIN_CONTENT_SIZE_MOBILE = 15; // relative size in percentage
-const FFT_SIZE = 64;
 const VISUALIZATION_UPDATE_TIME = 27; // ~37fps
 const TRACK_INFO_HEIGHT = 0.8; // relative size compared to main content
 const TRACK_INFO_TRAVEL_TIME = 40000;
@@ -36,6 +35,7 @@ const WS_CRYPTO_SUBSCRIBE_MESSAGE = {
   id: 1,
 };
 const PONG_MESSAGE_TIME_INTERVAL = 5 * 60 * 1000;
+const CRYPTO_UPDATE_RATE = 4;
 const TOP_CELLS_EFFECT_COLORS = [
   [0, 255, 255], [255, 0, 255], [255, 255, 0],
   [255, 255, 255], [255, 127, 0], [255, 0, 127],
@@ -50,10 +50,13 @@ const ethPriceTrackingContainer = document.querySelector('#widgets .eth-tracking
 const cells = [];
 const intervalIds = [];
 const isCellExisted = [];
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let audioCtx = null;
+const audioOutput = document.getElementById('audio-output');
+let audioSource = null;
+let audioAnalyser = null;
 let tracks = [];
 let currentTrackIndex = -1;
-let trackBuffer = null;
+let trackData = null;
 const visualizationBars = document.getElementsByClassName('bar');
 let widgetsExpanded = false;
 let wsInstance = null;
@@ -201,6 +204,28 @@ function getDataFromClass(className) {
   }
   element.remove();
   return JSON.parse(window.atob(str));
+}
+
+function getStreamNameFromWebSocketMessage(message = '') {
+  const msgLen = message.length;
+  const token = 'stream":';
+  let current = -1;
+  let index;
+  for (index = 0; index < msgLen && current < 7; index++) {
+    if (message[index] === token[current + 1]) {
+      current++;
+    } else {
+      current = message[index] === token[0] ? 0 : -1;
+    }
+  }
+  if (current < 7) {
+    return 'unhandled_stream';
+  }
+  let stream = '';
+  for (let i = index + 1; i < msgLen && message[i] !== '"'; i++) {
+    stream += message[i];
+  }
+  return stream;
 }
 
 // LOGIC
@@ -382,26 +407,20 @@ const loadTrack = (index) => new Promise((resolve) => {
   const { path, name, artist } = tracks[index];
   const ajaxRequest = new XMLHttpRequest();
   ajaxRequest.open('GET', path, true);
-  ajaxRequest.responseType = 'arraybuffer';
+  ajaxRequest.responseType = 'blob';
   ajaxRequest.onload = () => {
-    const audioData = ajaxRequest.response;
-    audioCtx.decodeAudioData(
-      audioData,
-      (audioBuffer) => {
-        const nextTrackIndex = (currentTrackIndex + 1) % tracks.length;
-        if (index !== nextTrackIndex) {
-          return;
-        }
-        trackBuffer = {
-          path,
-          name,
-          artist,
-          buffer: audioBuffer,
-        };
-        resolve();
-      },
-      () => resolve(),
-    );
+    const blobData = ajaxRequest.response;
+    const nextTrackIndex = (currentTrackIndex + 1) % tracks.length;
+    if (index !== nextTrackIndex || trackData !== null) {
+      return;
+    }
+    trackData = {
+      path,
+      name,
+      artist,
+      audioUrl: URL.createObjectURL(blobData),
+    };
+    resolve();
   };
   ajaxRequest.send();
 });
@@ -413,11 +432,41 @@ async function loadFirstTrack() {
   currentTrackIndex = 0;
 }
 
+function prepareMusic() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  audioSource = audioCtx.createMediaElementSource(audioOutput);
+  audioAnalyser = audioCtx.createAnalyser();
+  audioAnalyser.minDecibels = -90;
+  audioAnalyser.maxDecibels = -10;
+  audioAnalyser.smoothingTimeConstant = 0.85;
+  audioAnalyser.fftSize = 64;
+  audioSource.connect(audioAnalyser);
+  audioAnalyser.connect(audioCtx.destination);
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: 'Randy\'s music radio',
+      artist: 'Tap to go to the radio',
+      album: 'Tap to go to the radio',
+    });
+  }
+  function reloadOnVisiblePause() {
+    if (audioOutput.src?.indexOf('blob') !== -1 && audioOutput.paused) {
+      window.location.reload();
+    }
+  }
+  document.onvisibilitychange = () => {
+    if (document.visibilityState === 'visible') {
+      reloadOnVisiblePause();
+    }
+  };
+  window.addEventListener('focus', reloadOnVisiblePause);
+}
+
 function prepareTrack(index) {
   // avoid heavy load
   setTimeout(() => loadTrack(index), 2003);
   return setInterval(() => {
-    if (trackBuffer !== null) {
+    if (trackData !== null) {
       return;
     }
     loadTrack(index);
@@ -565,38 +614,30 @@ function startMusicVisualization(analyser) {
 }
 
 async function startMusic(fallback = null) {
-  if (trackBuffer === null) {
+  if (trackData === null) {
     if (fallback) {
-      trackBuffer = fallback;
+      trackData = fallback;
     } else {
       return;
     }
+  } else if (fallback) {
+    // delay to avoid heavy load
+    setTimeout(() => URL.revokeObjectURL(fallback.audioUrl), 20000);
   }
-  const currentTrack = trackBuffer;
-  trackBuffer = null;
-  const intervalId = prepareTrack((currentTrackIndex + 1) % tracks.length);
-  const analyser = audioCtx.createAnalyser();
-  analyser.minDecibels = -90;
-  analyser.maxDecibels = -10;
-  analyser.smoothingTimeConstant = 0.85;
-  const source = audioCtx.createBufferSource();
-  const audioBuffer = currentTrack.buffer;
-  source.buffer = audioBuffer;
-  source.connect(analyser);
-  analyser.connect(audioCtx.destination);
-  source.start();
   // animation at the beginning of the song
-  // delay to avoid heavy load
-  setTimeout(
-    () => onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true),
-    37,
-  );
-  analyser.fftSize = FFT_SIZE;
-  const stopVisualizationHandler = startMusicVisualization(analyser);
+  onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true);
+  const currentTrack = trackData;
+  trackData = null;
+  const intervalId = prepareTrack((currentTrackIndex + 1) % tracks.length);
+  audioOutput.src = currentTrack.audioUrl;
+  audioCtx.resume();
+  audioOutput.play();
+  const stopVisualizationHandler = startMusicVisualization(audioAnalyser);
   // delay to avoid heavy load
   await sleep(1213);
   const stopTrackInfoHandler = createTrackInfo(currentTrack);
-  source.onended = async () => {
+  audioOutput.onended = async () => {
+    audioOutput.src = '';
     currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
     clearInterval(intervalId);
     stopVisualizationHandler();
@@ -772,6 +813,9 @@ function updatePriceTracking(element, {
   priceChange,
   priceChangePercent,
 }, for24hStatistic = false) {
+  if (!widgetsExpanded) {
+    return;
+  }
   if (!for24hStatistic) {
     const priceStr = formatCryptoNumber(currentPrice);
     const diff = currentPrice - previousPrice;
@@ -799,8 +843,7 @@ function updatePriceTracking(element, {
   }
 }
 
-function sendPongMessage() {
-  const currentTime = getTime();
+function sendPongMessage(currentTime) {
   const diff = currentTime - lastPongMessageTime;
   if (diff >= PONG_MESSAGE_TIME_INTERVAL) {
     wsInstance.send(JSON.stringify({ ...WS_CRYPTO_SUBSCRIBE_MESSAGE, id: wsEventID }));
@@ -818,32 +861,54 @@ function createWSConnection() {
     wsInstance.send(JSON.stringify(WS_CRYPTO_SUBSCRIBE_MESSAGE));
   });
   const messageHandlers = {
-    [BTCUSDT_STREAM_NAME]: ({ price }) => {
-      lastBTCPrice = lastBTCPrice ?? price;
+    [BTCUSDT_STREAM_NAME]: function (currentTime, message) {
+      const timeDiff = currentTime - (this[BTCUSDT_STREAM_NAME]._lastUpdate_ ?? 0);
+      if (timeDiff < 1000 / CRYPTO_UPDATE_RATE) {
+        return;
+      }
+      const { data = {} } = JSON.parse(message);
+      const price = Number(data.p);
+      this[BTCUSDT_STREAM_NAME]._lastUpdate_ = currentTime;
       updatePriceTracking(btcPriceTrackingContainer, {
-        previousPrice: lastBTCPrice, currentPrice: price,
+        previousPrice: lastBTCPrice ?? price, currentPrice: price,
       });
       lastBTCPrice = price;
     },
-    [BTCUSDT_STATISTIC_STREAM_NAME]: ({
-      price: priceChange,
-      priceChangePercent,
-    }) => {
+    [BTCUSDT_STATISTIC_STREAM_NAME]: function (currentTime, message) {
+      const timeDiff = currentTime - (this[BTCUSDT_STATISTIC_STREAM_NAME]._lastUpdate_ ?? 0);
+      if (timeDiff < 1000 / CRYPTO_UPDATE_RATE) {
+        return;
+      }
+      const { data = {} } = JSON.parse(message);
+      const priceChange = Number(data.p);
+      const priceChangePercent = Number(data.P);
+      this[BTCUSDT_STATISTIC_STREAM_NAME]._lastUpdate_ = currentTime;
       updatePriceTracking(btcPriceTrackingContainer, {
         priceChange, priceChangePercent,
       }, true);
     },
-    [ETHUSDT_STREAM_NAME]: ({ price }) => {
-      lastETHPrice = lastETHPrice ?? price;
+    [ETHUSDT_STREAM_NAME]: function (currentTime, message) {
+      const timeDiff = currentTime - (this[ETHUSDT_STREAM_NAME]._lastUpdate_ ?? 0);
+      if (timeDiff < 1000 / CRYPTO_UPDATE_RATE) {
+        return;
+      }
+      const { data = {} } = JSON.parse(message);
+      const price = Number(data.p);
+      this[ETHUSDT_STREAM_NAME]._lastUpdate_ = currentTime;
       updatePriceTracking(ethPriceTrackingContainer, {
-        previousPrice: lastETHPrice, currentPrice: price,
+        previousPrice: lastETHPrice ?? price, currentPrice: price,
       });
       lastETHPrice = price;
     },
-    [ETHUSDT_STATISTIC_STREAM_NAME]: ({
-      price: priceChange,
-      priceChangePercent,
-    }) => {
+    [ETHUSDT_STATISTIC_STREAM_NAME]: function (currentTime, message) {
+      const timeDiff = currentTime - (this[ETHUSDT_STATISTIC_STREAM_NAME]._lastUpdate_ ?? 0);
+      if (timeDiff < 1000 / CRYPTO_UPDATE_RATE) {
+        return;
+      }
+      const { data = {} } = JSON.parse(message);
+      const priceChange = Number(data.p);
+      const priceChangePercent = Number(data.P);
+      this[ETHUSDT_STATISTIC_STREAM_NAME]._lastUpdate_ = currentTime;
       updatePriceTracking(ethPriceTrackingContainer, {
         priceChange,
         priceChangePercent,
@@ -851,12 +916,11 @@ function createWSConnection() {
     },
   };
   wsInstance.addEventListener('message', ({ data: message }) => {
-    lastMessageTime = getTime();
-    const { data = {}, stream = 'unhandled_stream' } = JSON.parse(message);
-    const price = Number(data.p);
-    const priceChangePercent = Number(data.P);
-    messageHandlers[stream]?.({ price, priceChangePercent });
-    sendPongMessage();
+    const currentTime = getTime();
+    lastMessageTime = currentTime;
+    sendPongMessage(currentTime);
+    const stream = getStreamNameFromWebSocketMessage(message);
+    messageHandlers[stream]?.(currentTime, message);
   });
 }
 
@@ -971,6 +1035,7 @@ async function init() {
   alertText.style.transition = 'opacity 0.5s';
   const loadingScreen = document.getElementById('loading');
   addUniversalSensitiveClickListener(loadingScreen, async () => {
+    prepareMusic();
     await requireGeoInfo();
     startWeatherWidget();
     const mainContainerSizeAfterScaling = (appHeight
