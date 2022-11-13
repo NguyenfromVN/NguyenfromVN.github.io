@@ -50,6 +50,10 @@ body {
   opacity: 0;
 }
 
+#widgets * {
+  white-space: nowrap;
+}
+
 .widgets-expand {
   animation: resizeAnimation 0.6s ease-in-out forwards;
 }
@@ -133,6 +137,10 @@ body {
   padding-left: 2vh;
 }
 
+#widgets .content .column-2 div {
+  text-align: right;
+}
+
 #widgets .content .divider {
   flex-grow: 1;
 }
@@ -144,12 +152,10 @@ body {
 #widgets .crypto .description {
   font-size: 1.2vh;
   color: #848e9c;
-  text-align: right;
 }
 
 #widgets .crypto .row-2 {
   font-size: 1.2vh;
-  white-space: nowrap;
 }
 
 .widget-content-expand {
@@ -196,6 +202,10 @@ body {
   text-align: center;
 }
 
+#widgets .weather .minmax-temp .middle-char {
+  color: #dddddd;
+}
+
 #widgets .weather .min {
   color: #8ab7ff;
 }
@@ -216,12 +226,6 @@ body {
   font-size: 1.1vh;
 }
 
-#widgets .weather .weather-description,
-#widgets .weather .location {
-  text-align: right;
-  white-space: nowrap;
-}
-
 #widgets .weather .weather-description {
   font-size: 1.2vh;
 }
@@ -237,6 +241,26 @@ body {
   --prop1: wMjI4NGU5ZjRkZjQ4NWViMjc1YTIxYjg3IiwiZjJiNDYyZDRhNTVhMGU1Zj;
   --prop2: Q0NzVkYTgwNTEyMGFlOTciLCJmNjFlYmMwYTliYTdmY2NlMmU1MGY0YTAyY;
   --prop3: zZkNTYyMSIsImI3MGI2YTQ0MzI4YTg0Yjk2NzA4Yjg4ZTJkMTM1YjlkIl0=;
+}
+
+#widgets .content .clock {
+  margin-left: 2vh;
+  flex-grow: 1;
+}
+
+#widgets .content .clock div {
+  text-align: center;
+  color: #ffa5eb;
+}
+
+#widgets .content .clock .row-1 {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1.5vh;
+}
+
+#widgets .content .clock .row-2 {
+  font-family: "Permanent Marker", serif;
+  font-size: 1.3vh;
 }
 
 /* TRACK INFO */
@@ -498,7 +522,6 @@ body {
 #mini-logo .name {
   font-family: "Playfair Display SC";
   font-size: 1.4rem;
-  font-weight: lighter;
 }
 
 @keyframes hobbiesAnimation {
@@ -536,7 +559,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #e09ce0;
+  color: #ffa5eb;
 }
 
 /* CELLS */

@@ -40,6 +40,27 @@ const TOP_CELLS_EFFECT_COLORS = [
   [0, 255, 255], [255, 0, 255], [255, 255, 0],
   [255, 255, 255], [255, 127, 0], [255, 0, 127],
   [127, 255, 0], [0, 255, 127], [127, 0, 255], [0, 127, 255]];
+const DATE_ABBREVIATION = {
+  Mon: 'Monday',
+  Tue: 'Tuesday',
+  Wed: 'Wednesday',
+  Thu: 'Thursday',
+  Fri: 'Friday',
+  Sat: 'Saturday',
+  Sun: 'Sunday',
+  Jan: 'January',
+  Feb: 'February',
+  Mar: 'March',
+  Apr: 'April',
+  May: 'May',
+  Jun: 'June',
+  Jul: 'July',
+  Aug: 'August',
+  Sep: 'September',
+  Oct: 'October',
+  Nov: 'November',
+  Dec: 'December',
+};
 
 // GLOBAL VARS
 let rows;
@@ -861,57 +882,62 @@ function createWSConnection() {
     wsInstance.send(JSON.stringify(WS_CRYPTO_SUBSCRIBE_MESSAGE));
   });
   const messageHandlers = {
-    [BTCUSDT_STREAM_NAME]: function (currentTime, message) {
-      const timeDiff = currentTime - (this[BTCUSDT_STREAM_NAME]._lastUpdate_ ?? 0);
+    _limitUpdateRate_: (currentTime, self, message) => {
+      const timeDiff = currentTime - (self._lastUpdate_ ?? 0);
       if (timeDiff < 1000 / CRYPTO_UPDATE_RATE) {
-        return;
+        return null;
       }
       const { data = {} } = JSON.parse(message);
       const price = Number(data.p);
-      this[BTCUSDT_STREAM_NAME]._lastUpdate_ = currentTime;
-      updatePriceTracking(btcPriceTrackingContainer, {
-        previousPrice: lastBTCPrice ?? price, currentPrice: price,
-      });
-      lastBTCPrice = price;
+      const priceChangePercent = Number(data.P);
+      self._lastUpdate_ = currentTime;
+      return { price, priceChangePercent };
     },
-    [BTCUSDT_STATISTIC_STREAM_NAME]: function (currentTime, message) {
-      const timeDiff = currentTime - (this[BTCUSDT_STATISTIC_STREAM_NAME]._lastUpdate_ ?? 0);
-      if (timeDiff < 1000 / CRYPTO_UPDATE_RATE) {
+    [BTCUSDT_STREAM_NAME]: function (currentTime, message) {
+      const data = this._limitUpdateRate_(currentTime, this[BTCUSDT_STREAM_NAME], message);
+      if (!data) {
         return;
       }
-      const { data = {} } = JSON.parse(message);
-      const priceChange = Number(data.p);
-      const priceChangePercent = Number(data.P);
-      this[BTCUSDT_STATISTIC_STREAM_NAME]._lastUpdate_ = currentTime;
       updatePriceTracking(btcPriceTrackingContainer, {
-        priceChange, priceChangePercent,
+        previousPrice: lastBTCPrice ?? data.price, currentPrice: data.price,
+      });
+      lastBTCPrice = data.price;
+    },
+    [BTCUSDT_STATISTIC_STREAM_NAME]: function (currentTime, message) {
+      const data = this._limitUpdateRate_(
+        currentTime,
+        this[BTCUSDT_STATISTIC_STREAM_NAME],
+        message,
+      );
+      if (!data) {
+        return;
+      }
+      updatePriceTracking(btcPriceTrackingContainer, {
+        priceChange: data.price, priceChangePercent: data.priceChangePercent,
       }, true);
     },
     [ETHUSDT_STREAM_NAME]: function (currentTime, message) {
-      const timeDiff = currentTime - (this[ETHUSDT_STREAM_NAME]._lastUpdate_ ?? 0);
-      if (timeDiff < 1000 / CRYPTO_UPDATE_RATE) {
+      const data = this._limitUpdateRate_(currentTime, this[ETHUSDT_STREAM_NAME], message);
+      if (!data) {
         return;
       }
-      const { data = {} } = JSON.parse(message);
-      const price = Number(data.p);
-      this[ETHUSDT_STREAM_NAME]._lastUpdate_ = currentTime;
       updatePriceTracking(ethPriceTrackingContainer, {
-        previousPrice: lastETHPrice ?? price, currentPrice: price,
+        previousPrice: lastETHPrice ?? data.price, currentPrice: data.price,
       });
-      lastETHPrice = price;
+      lastETHPrice = data.price;
     },
     [ETHUSDT_STATISTIC_STREAM_NAME]: function (currentTime, message) {
-      const timeDiff = currentTime - (this[ETHUSDT_STATISTIC_STREAM_NAME]._lastUpdate_ ?? 0);
-      if (timeDiff < 1000 / CRYPTO_UPDATE_RATE) {
+      const data = this._limitUpdateRate_(
+        currentTime,
+        this[ETHUSDT_STATISTIC_STREAM_NAME],
+        message,
+      );
+      if (!data) {
         return;
       }
-      const { data = {} } = JSON.parse(message);
-      const priceChange = Number(data.p);
-      const priceChangePercent = Number(data.P);
-      this[ETHUSDT_STATISTIC_STREAM_NAME]._lastUpdate_ = currentTime;
       updatePriceTracking(ethPriceTrackingContainer, {
-        priceChange,
-        priceChangePercent,
+        priceChange: data.price,
+        priceChangePercent: data.priceChangePercent,
       }, true);
     },
   };
@@ -1015,6 +1041,29 @@ function requireGeoInfo() {
   });
 }
 
+function startClock() {
+  const clockFirstRow = document.querySelector('#widgets .clock .row-1');
+  const clockSecondRow = document.querySelector('#widgets .clock .row-2');
+  function updateTime(dateObj) {
+    const str = dateObj.toString();
+    const tokens = str.split(' ');
+    const temp = `${tokens[4]} ${tokens[5]}`;
+    const firstRowText = `${temp.slice(0, 15)}:${temp.slice(15, 17)}`;
+    const secondRowText = `${DATE_ABBREVIATION[tokens[0]]}, ${tokens[2]} ${DATE_ABBREVIATION[tokens[1]]} ${tokens[3]}`;
+    clockFirstRow.textContent = firstRowText;
+    clockSecondRow.textContent = secondRowText;
+  }
+  function tick() {
+    const dateObj = new Date();
+    const time = dateObj.getTime();
+    const nextTime = Math.floor((time + 1000) / 1000) * 1000;
+    const delay = nextTime - time;
+    updateTime(dateObj);
+    setTimeout(tick, delay);
+  }
+  tick();
+}
+
 // INIT FUNCTION
 async function init() {
   const appWidth = AppContainer.offsetWidth;
@@ -1022,6 +1071,7 @@ async function init() {
   const startTime = getTime();
   createGridSystem(appWidth, appHeight);
   startCryptoPriceTracking();
+  startClock();
   await loadFirstTrack();
   // wait more if loading time is way too fast
   const currentTime = getTime();
