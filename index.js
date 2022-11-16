@@ -297,7 +297,7 @@ function makeCellAnimation(
   }
 }
 
-function createDot(dotSize, top, left) {
+function createDot(dotSize, top, left, imgSrc, linkElement) {
   const dot = document.createElement('div');
   dot.style.height = `${dotSize}px`;
   dot.style.width = `${dotSize}px`;
@@ -306,6 +306,18 @@ function createDot(dotSize, top, left) {
   dot.style.left = `${left}px`;
   dot.style.opacity = '0';
   dot.classList.add('randy');
+  if (!imgSrc) {
+    return dot;
+  }
+  dot.style.display = 'flex';
+  dot.style.justifyContent = 'center';
+  dot.style.alignItems = 'center';
+  const img = document.createElement('img');
+  img.src = imgSrc;
+  img.style.width = '65%';
+  img.style.height = '65%';
+  dot.append(img);
+  addUniversalSensitiveClickListener(dot, () => linkElement.click());
   return dot;
 }
 
@@ -330,7 +342,7 @@ function startSignatureNeonEffect() {
       });
     }
     makeFlickeringEffect([
-      73, 73, 73, 73, 73, 73, 73, 73, 73, 73, 73, 73, 1409, 127, 1409, 127, 1801,
+      103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 1409, 127, 1409, 127, 1801,
     ]);
   }
   makeEffect();
@@ -364,6 +376,25 @@ function topCellsEffect() {
 }
 
 function startDotGame() {
+  const links = [
+    {
+      imgSrc: './images/github.png',
+      linkElement: document.getElementById('a-github'),
+    },
+    {
+      imgSrc: './images/gmail.png',
+      linkElement: document.getElementById('a-gmail'),
+    },
+    {
+      imgSrc: './images/linkedin.png',
+      linkElement: document.getElementById('a-linkedin'),
+    },
+    {
+      imgSrc: './images/whatsapp.png',
+      linkElement: document.getElementById('a-whatsapp'),
+    },
+  ];
+  let currentIndex = -1;
   setInterval(() => {
     // skip generating when the tab is out of focus
     if (!document.hasFocus()) {
@@ -378,10 +409,20 @@ function startDotGame() {
     const dotSize = (getRandom(minDotSize, maxDotSize) / 100) * appWidth;
     const top = getRandom(appHeight / rows, appHeight / 8);
     const left = getRandom(0, appWidth - dotSize);
-    const dot = createDot(dotSize, top, left);
+    currentIndex++;
+    const hasLink = currentIndex % 2 === 0;
+    const dot = createDot(
+      dotSize,
+      top,
+      left,
+      hasLink && links[(currentIndex / 2) % links.length].imgSrc,
+      hasLink && links[(currentIndex / 2) % links.length].linkElement,
+    );
     addUniversalSensitiveClickListener(dot, () => {
       dot.remove();
-      topCellsEffect();
+      if (!hasLink) {
+        topCellsEffect();
+      }
     });
     AppContainer.append(dot);
     makeAnimation(dot, 'dot');
