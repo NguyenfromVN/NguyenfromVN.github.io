@@ -237,10 +237,12 @@ body {
 
 .weather-app-ids {
   display: none;
-  --prop0: WyIxYWY5NTlhMzhiMGVmMTQ5M2ZlMDM4OWFjNGNkMjM3MSIsIjNjODNhODg;
-  --prop1: wMjI4NGU5ZjRkZjQ4NWViMjc1YTIxYjg3IiwiZjJiNDYyZDRhNTVhMGU1Zj;
-  --prop2: Q0NzVkYTgwNTEyMGFlOTciLCJmNjFlYmMwYTliYTdmY2NlMmU1MGY0YTAyY;
-  --prop3: zZkNTYyMSIsImI3MGI2YTQ0MzI4YTg0Yjk2NzA4Yjg4ZTJkMTM1YjlkIl0=;
+  --prop0: eyJhcHBJZHMiOlsiZjYxZWJjMGE5YmE3ZmNjZTJlNTBmNGEwMmM2ZD;
+  --prop1: U2MjEiLCIzYzgzYTg4MDIyODRlOWY0ZGY0ODVlYjI3NWEyMWI4NyIs;
+  --prop2: ImI3MGI2YTQ0MzI4YTg0Yjk2NzA4Yjg4ZTJkMTM1YjlkIiwiZjJiND;
+  --prop3: YyZDRhNTVhMGU1ZjQ0NzVkYTgwNTEyMGFlOTciLCIxYWY5NTlhMzhi;
+  --prop4: MGVmMTQ5M2ZlMDM4OWFjNGNkMjM3MSJdLCJ1cmwiOiJodHRwczovL2;
+  --prop5: FwaS5vcGVud2VhdGhlcm1hcC5vcmcvZGF0YS8yLjUvd2VhdGhlciJ9;
 }
 
 #widgets .content .clock {
@@ -620,7 +622,8 @@ body {
   width: 100%;
 }
 
-#start-alert div {
+#start-alert * {
+  font-family: sans-serif;
   text-decoration: underline;
   text-align: center;
 }

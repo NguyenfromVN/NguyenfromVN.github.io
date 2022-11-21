@@ -120,6 +120,9 @@ function makeAnimation(element, className) {
 }
 
 function isMobileDevice() {
+  if (navigator.userAgentData) {
+    return navigator.userAgentData.mobile;
+  }
   const toMatch = [
     /Android/i,
     /webOS/i,
@@ -491,10 +494,14 @@ async function loadFirstTrack() {
   tracks = getDataFromClass('tracks-info');
   shuffleArray(tracks);
   await loadTrack(0);
+  audioOutput.src = trackData.audioUrl;
   currentTrackIndex = 0;
 }
 
 function prepareMusic() {
+  // webview requires instant playback after the user gesture
+  audioOutput.play();
+  audioOutput.volume = '0';
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   audioSource = audioCtx.createMediaElementSource(audioOutput);
   audioAnalyser = audioCtx.createAnalyser();
@@ -692,6 +699,7 @@ async function startMusic(fallback = null) {
   trackData = null;
   const intervalId = prepareTrack((currentTrackIndex + 1) % tracks.length);
   audioOutput.src = currentTrack.audioUrl;
+  audioOutput.volume = '1';
   audioCtx.resume();
   audioOutput.play();
   const stopVisualizationHandler = startMusicVisualization(audioAnalyser);
@@ -1024,12 +1032,12 @@ function getWeatherDescription(description, weatherId) {
 }
 
 async function getWeatherInfo() {
-  const weatherAppIds = getDataFromClass('weather-app-ids');
-  shuffleArray(weatherAppIds);
-  for (let i = 0; i < weatherAppIds.length; i++) {
-    const appId = weatherAppIds[i];
+  const { appIds, url } = getDataFromClass('weather-app-ids');
+  shuffleArray(appIds);
+  for (let i = 0; i < appIds.length; i++) {
+    const appId = appIds[i];
     try {
-      const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${long}&appid=${appId}&units=metric`);
+      const response = await fetch(`${url}?lat=${lat}&lon=${long}&appid=${appId}&units=metric`);
       const data = await response.json();
       const {
         main: { temp, temp_min: minTemp, temp_max: maxTemp },
@@ -1125,7 +1133,7 @@ async function init() {
   alertText.style.opacity = '1';
   alertText.style.transition = 'opacity 0.5s';
   const loadingScreen = document.getElementById('loading');
-  addUniversalSensitiveClickListener(loadingScreen, async () => {
+  loadingScreen.addEventListener('click', async () => {
     prepareMusic();
     await requireGeoInfo();
     startWeatherWidget();
