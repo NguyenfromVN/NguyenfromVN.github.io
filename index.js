@@ -499,9 +499,9 @@ async function loadFirstTrack() {
 }
 
 function prepareMusic() {
-  // webview requires instant playback after the user gesture
+  audioOutput.autoplay = true;
+  audioOutput.volume = 0;
   audioOutput.play();
-  audioOutput.volume = '0';
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   audioSource = audioCtx.createMediaElementSource(audioOutput);
   audioAnalyser = audioCtx.createAnalyser();
@@ -602,6 +602,8 @@ function createTrackInfo({ name, artist }) {
   }
   let intervalID;
   function startTrackInfo() {
+    clearInterval(intervalID);
+    clearOldSpans(trackInfoContainer);
     // skip when the tab is out of focus
     if (!document.hasFocus()) {
       return;
@@ -699,9 +701,7 @@ async function startMusic(fallback = null) {
   trackData = null;
   const intervalId = prepareTrack((currentTrackIndex + 1) % tracks.length);
   audioOutput.src = currentTrack.audioUrl;
-  audioOutput.volume = '1';
-  audioCtx.resume();
-  audioOutput.play();
+  audioOutput.volume = 1;
   const stopVisualizationHandler = startMusicVisualization(audioAnalyser);
   // delay to avoid heavy load
   await sleep(1213);
