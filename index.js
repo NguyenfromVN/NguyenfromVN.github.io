@@ -498,8 +498,7 @@ async function loadFirstTrack() {
 }
 
 function prepareMusic() {
-  audioOutput.autoplay = true;
-  audioOutput.volume = 0.01;
+  audioOutput.volume = 0;
   audioOutput.src = trackData.audioUrl;
   audioOutput.play();
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
