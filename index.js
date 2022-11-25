@@ -494,13 +494,13 @@ async function loadFirstTrack() {
   tracks = getDataFromClass('tracks-info');
   shuffleArray(tracks);
   await loadTrack(0);
-  audioOutput.src = trackData.audioUrl;
   currentTrackIndex = 0;
 }
 
 function prepareMusic() {
   audioOutput.autoplay = true;
-  audioOutput.volume = 0;
+  audioOutput.volume = 0.01;
+  audioOutput.src = trackData.audioUrl;
   audioOutput.play();
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   audioSource = audioCtx.createMediaElementSource(audioOutput);
@@ -700,8 +700,8 @@ async function startMusic(fallback = null) {
   const currentTrack = trackData;
   trackData = null;
   const intervalId = prepareTrack((currentTrackIndex + 1) % tracks.length);
-  audioOutput.src = currentTrack.audioUrl;
   audioOutput.volume = 1;
+  audioOutput.src = currentTrack.audioUrl;
   const stopVisualizationHandler = startMusicVisualization(audioAnalyser);
   // delay to avoid heavy load
   await sleep(1213);
