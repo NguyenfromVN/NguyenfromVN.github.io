@@ -498,7 +498,8 @@ async function loadFirstTrack() {
 }
 
 function prepareMusic() {
-  audioOutput.src = 'data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQsRbAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zQMSkAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV';
+  audioOutput.src = trackData.audioUrl;
+  audioOutput.volume = 0;
   audioOutput.play();
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   audioSource = audioCtx.createMediaElementSource(audioOutput);
@@ -682,36 +683,38 @@ function startMusicVisualization(analyser) {
   };
 }
 
-async function startMusic(fallback = null) {
-  if (trackData === null) {
-    if (fallback) {
-      trackData = fallback;
-    } else {
-      return;
-    }
-  } else if (fallback) {
-    // delay to avoid heavy load
-    setTimeout(() => URL.revokeObjectURL(fallback.audioUrl), 20000);
+async function startMusic(track) {
+  if (track === null) {
+    return;
   }
+  trackData = null;
   // animation at the beginning of the song
   onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true);
-  const currentTrack = trackData;
-  trackData = null;
+  audioOutput.volume = 1;
+  audioOutput.currentTime = 0;
   const intervalId = prepareTrack((currentTrackIndex + 1) % tracks.length);
-  audioOutput.src = currentTrack.audioUrl;
   const stopVisualizationHandler = startMusicVisualization(audioAnalyser);
   // delay to avoid heavy load
   await sleep(1213);
-  const stopTrackInfoHandler = createTrackInfo(currentTrack);
+  const stopTrackInfoHandler = createTrackInfo(track);
   audioOutput.onended = async () => {
-    audioOutput.src = '';
+    if (trackData === null) {
+      trackData = track;
+    } else {
+      // delay to avoid heavy load
+      setTimeout(() => URL.revokeObjectURL(track.audioUrl), 20000);
+    }
+    const nextTrack = trackData;
+    audioOutput.src = nextTrack.audioUrl;
+    audioOutput.volume = 0;
+    audioOutput.play();
     currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
     clearInterval(intervalId);
     stopVisualizationHandler();
     stopTrackInfoHandler(true);
     await sleep(1000);
     // play next track
-    startMusic(currentTrack);
+    startMusic(nextTrack);
   };
 }
 
@@ -1146,7 +1149,7 @@ async function init() {
     setTimeout(startDotGame, 1409);
     prepareTrackInfoLayout(appWidth, appHeight, mainContainerSizeAfterScaling);
     await sleep(8000);
-    startMusic();
+    startMusic(trackData);
     // delay to avoid heavy load
     setTimeout(() => {
       showMiniLogo();
