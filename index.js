@@ -499,7 +499,7 @@ async function loadFirstTrack() {
 
 function prepareMusic() {
   audioOutput.src = trackData.audioUrl;
-  audioOutput.volume = 0;
+  audioOutput.muted = true;
   audioOutput.play();
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   audioSource = audioCtx.createMediaElementSource(audioOutput);
@@ -690,7 +690,7 @@ async function startMusic(track) {
   trackData = null;
   // animation at the beginning of the song
   onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true);
-  audioOutput.volume = 1;
+  audioOutput.muted = false;
   audioOutput.currentTime = 0;
   const intervalId = prepareTrack((currentTrackIndex + 1) % tracks.length);
   const stopVisualizationHandler = startMusicVisualization(audioAnalyser);
@@ -706,7 +706,7 @@ async function startMusic(track) {
     }
     const nextTrack = trackData;
     audioOutput.src = nextTrack.audioUrl;
-    audioOutput.volume = 0;
+    audioOutput.muted = true;
     audioOutput.play();
     currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
     clearInterval(intervalId);
