@@ -499,7 +499,6 @@ async function loadFirstTrack() {
 
 function prepareMusic() {
   audioOutput.src = trackData.audioUrl;
-  audioOutput.muted = true;
   audioOutput.play();
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   audioSource = audioCtx.createMediaElementSource(audioOutput);
