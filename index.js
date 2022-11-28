@@ -74,6 +74,7 @@ const isCellExisted = [];
 let audioCtx = null;
 const audioOutput = document.getElementById('audio-output');
 let audioSource = null;
+let gainNode = null;
 let audioAnalyser = null;
 let tracks = [];
 let currentTrackIndex = -1;
@@ -497,18 +498,25 @@ async function loadFirstTrack() {
   currentTrackIndex = 0;
 }
 
+function setVolume(value) {
+  gainNode.gain.value = value;
+}
+
 function prepareMusic() {
-  audioOutput.src = trackData.audioUrl;
-  audioOutput.play();
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   audioSource = audioCtx.createMediaElementSource(audioOutput);
+  gainNode = audioCtx.createGain();
   audioAnalyser = audioCtx.createAnalyser();
   audioAnalyser.minDecibels = -90;
   audioAnalyser.maxDecibels = -10;
   audioAnalyser.smoothingTimeConstant = 0.85;
   audioAnalyser.fftSize = 64;
-  audioSource.connect(audioAnalyser);
+  audioSource.connect(gainNode);
+  gainNode.connect(audioAnalyser);
   audioAnalyser.connect(audioCtx.destination);
+  audioOutput.src = trackData.audioUrl;
+  setVolume(0);
+  audioOutput.play();
   if ('mediaSession' in navigator) {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: 'Randy\'s music radio',
@@ -689,8 +697,8 @@ async function startMusic(track) {
   trackData = null;
   // animation at the beginning of the song
   onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true);
-  audioOutput.muted = false;
   audioOutput.currentTime = 0;
+  setVolume(1);
   const intervalId = prepareTrack((currentTrackIndex + 1) % tracks.length);
   const stopVisualizationHandler = startMusicVisualization(audioAnalyser);
   // delay to avoid heavy load
@@ -705,7 +713,7 @@ async function startMusic(track) {
     }
     const nextTrack = trackData;
     audioOutput.src = nextTrack.audioUrl;
-    audioOutput.muted = true;
+    setVolume(0);
     audioOutput.play();
     currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
     clearInterval(intervalId);
