@@ -698,7 +698,7 @@ async function startMusic(track) {
   // animation at the beginning of the song
   onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true);
   audioOutput.currentTime = 0;
-  setVolume(1);
+  audioOutput.onseeked = () => setVolume(1);
   const intervalId = prepareTrack((currentTrackIndex + 1) % tracks.length);
   const stopVisualizationHandler = startMusicVisualization(audioAnalyser);
   // delay to avoid heavy load
