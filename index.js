@@ -516,6 +516,7 @@ function prepareMusic() {
   audioAnalyser.connect(audioCtx.destination);
   audioOutput.src = trackData.audioUrl;
   setVolume(0);
+  audioOutput.playbackRate = 0.1;
   audioOutput.play();
   if ('mediaSession' in navigator) {
     navigator.mediaSession.metadata = new MediaMetadata({
@@ -698,7 +699,14 @@ async function startMusic(track) {
   // animation at the beginning of the song
   onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true);
   audioOutput.currentTime = 0;
-  audioOutput.onseeked = () => setVolume(1);
+  function upTheVolumeAtBeginOfTheTrack() {
+    if (audioOutput.currentTime <= 0.1) {
+      setVolume(1);
+    } else {
+      setTimeout(upTheVolumeAtBeginOfTheTrack, 10);
+    }
+  }
+  upTheVolumeAtBeginOfTheTrack();
   const intervalId = prepareTrack((currentTrackIndex + 1) % tracks.length);
   const stopVisualizationHandler = startMusicVisualization(audioAnalyser);
   // delay to avoid heavy load
@@ -1156,6 +1164,7 @@ async function init() {
     setTimeout(startDotGame, 1409);
     prepareTrackInfoLayout(appWidth, appHeight, mainContainerSizeAfterScaling);
     await sleep(8000);
+    audioOutput.playbackRate = 1;
     startMusic(trackData);
     // delay to avoid heavy load
     setTimeout(() => {
