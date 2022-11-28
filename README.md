@@ -2,6 +2,8 @@
 
 This is my first side project since I started my professional career on September 2021 (as a full-time Frontend Software Engineer)
 
+Live at https://nguyenfromvn.github.io/
+
 ## Highlights:
 - A music radio that can play music **uninterruptedly**, even when the network is slow or losing connection, or even if the screen is **off** or the device is **locked** (Android devices)
 - Well performance optimizations including **fps lock**, using **custom code** instead of JavaScript builtin functions, **precise timing** for heavy tasks, using the **Performance tab** of Dev tools, etc. resulting in a very smooth experience with high framerate, even on mobile devices
