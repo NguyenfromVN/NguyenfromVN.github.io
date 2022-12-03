@@ -221,7 +221,7 @@ function getDataFromClass(className) {
   const element = document.querySelector(`.${className}`);
   let str = '';
   for (let i = 0; ; i++) {
-    const s = getComputedStyle(element).getPropertyValue(`--prop${i}`);
+    const s = getComputedStyle(element).getPropertyValue(`--attr${i}`);
     if (!s) {
       break;
     }
@@ -841,6 +841,20 @@ function prepareTrackInfoLayout(
   trackInfoContainer.style.transform = `rotate(${-alpha}rad)`;
 }
 
+function resetWidgetsLayout() {
+  const elements = document.querySelectorAll('#widgets .content div *');
+  const sz = elements.length;
+  for (let i = 0; i < sz; i++) {
+    const element = elements[i];
+    const isContainer = element.querySelectorAll('*').length > 0;
+    if (!isContainer) {
+      const text = element.textContent;
+      element.textContent = '';
+      element.textContent = text;
+    }
+  }
+}
+
 function showWidgets() {
   const widgetsContainer = document.getElementById('widgets');
   const widgetsIcon = document.querySelectorAll('#widgets img');
@@ -882,6 +896,8 @@ function showWidgets() {
   addUniversalSensitiveClickListener(widgetsContainer, () => {
     makeWidgetsAnimation(!widgetsExpanded);
   });
+  // force re-layout to avoid layout misalignments
+  resetWidgetsLayout();
   // show widgets
   widgetsContainer.style.transition = 'opacity 1s linear';
   widgetsContainer.style.opacity = '1';
@@ -897,8 +913,8 @@ function updatePriceTracking(element, {
   currentPrice,
   priceChange,
   priceChangePercent,
-}, for24hStatistic = false) {
-  if (!widgetsExpanded) {
+}, firstUpdate, for24hStatistic = false) {
+  if (!widgetsExpanded && !firstUpdate) {
     return;
   }
   if (!for24hStatistic) {
@@ -954,8 +970,9 @@ function createWSConnection() {
       const { data = {} } = JSON.parse(message);
       const price = Number(data.p);
       const priceChangePercent = Number(data.P);
+      const firstUpdate = self._lastUpdate_ === undefined;
       self._lastUpdate_ = currentTime;
-      return { price, priceChangePercent };
+      return { price, priceChangePercent, firstUpdate };
     },
     [BTCUSDT_STREAM_NAME]: function (currentTime, message) {
       const data = this._limitUpdateRate_(currentTime, this[BTCUSDT_STREAM_NAME], message);
@@ -964,7 +981,7 @@ function createWSConnection() {
       }
       updatePriceTracking(btcPriceTrackingContainer, {
         previousPrice: lastBTCPrice ?? data.price, currentPrice: data.price,
-      });
+      }, data.firstUpdate);
       lastBTCPrice = data.price;
     },
     [BTCUSDT_STATISTIC_STREAM_NAME]: function (currentTime, message) {
@@ -978,7 +995,7 @@ function createWSConnection() {
       }
       updatePriceTracking(btcPriceTrackingContainer, {
         priceChange: data.price, priceChangePercent: data.priceChangePercent,
-      }, true);
+      }, data.firstUpdate, true);
     },
     [ETHUSDT_STREAM_NAME]: function (currentTime, message) {
       const data = this._limitUpdateRate_(currentTime, this[ETHUSDT_STREAM_NAME], message);
@@ -987,7 +1004,7 @@ function createWSConnection() {
       }
       updatePriceTracking(ethPriceTrackingContainer, {
         previousPrice: lastETHPrice ?? data.price, currentPrice: data.price,
-      });
+      }, data.firstUpdate);
       lastETHPrice = data.price;
     },
     [ETHUSDT_STATISTIC_STREAM_NAME]: function (currentTime, message) {
@@ -1002,7 +1019,7 @@ function createWSConnection() {
       updatePriceTracking(ethPriceTrackingContainer, {
         priceChange: data.price,
         priceChangePercent: data.priceChangePercent,
-      }, true);
+      }, data.firstUpdate, true);
     },
   };
   wsInstance.addEventListener('message', ({ data: message }) => {

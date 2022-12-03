@@ -22,6 +22,7 @@
         "linebreak-style": "off",
         "no-underscore-dangle": "off",
         "object-shorthand": "off",
-        "func-names": "off"
+        "func-names": "off",
+        "no-continue": "off"
     }
 }
