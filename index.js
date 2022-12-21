@@ -703,7 +703,7 @@ async function startMusic(track) {
     if (audioOutput.currentTime <= 0.1) {
       setVolume(1);
     } else {
-      setTimeout(upTheVolumeAtBeginOfTheTrack, 10);
+      setTimeout(upTheVolumeAtBeginOfTheTrack);
     }
   }
   upTheVolumeAtBeginOfTheTrack();

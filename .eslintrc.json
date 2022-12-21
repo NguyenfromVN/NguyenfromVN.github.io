@@ -1,28 +1,34 @@
 {
-    "env": {
-        "browser": true,
-        "commonjs": true,
-        "es2021": true
-    },
-    "extends": [
-        "airbnb-base"
-    ],
-    "parserOptions": {
-        "ecmaVersion": "latest"
-    },
-    "rules": {
-        "no-plusplus": "off",
-        "no-loop-func": "off",
-        "no-param-reassign": "off",
-        "no-mixed-operators": "off",
-        "default-case": "off",
-        "no-await-in-loop": "warn",
-        "prefer-destructuring": "off",
-        "no-inner-declarations": "off",
-        "linebreak-style": "off",
-        "no-underscore-dangle": "off",
-        "object-shorthand": "off",
-        "func-names": "off",
-        "no-continue": "off"
-    }
+  "env": {
+    "browser": true,
+    "commonjs": true,
+    "es2021": true
+  },
+  "extends": [
+    "airbnb-base"
+  ],
+  "parserOptions": {
+    "ecmaVersion": "latest"
+  },
+  "rules": {
+    "no-plusplus": "off",
+    "no-loop-func": "off",
+    "no-param-reassign": "off",
+    "no-mixed-operators": "off",
+    "default-case": "off",
+    "no-await-in-loop": "warn",
+    "prefer-destructuring": "off",
+    "no-inner-declarations": "off",
+    "linebreak-style": "off",
+    "no-underscore-dangle": "off",
+    "object-shorthand": "off",
+    "func-names": "off",
+    "no-continue": "off",
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": true
+      }
+    ]
+  }
 }
