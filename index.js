@@ -17,7 +17,9 @@ const LOADING_FADE_OUT_TIME = 1000;
 const MIN_LOADING_TIME = 4000;
 const MAIN_CONTENT_SIZE = 20; // relative size in percentage
 const MAIN_CONTENT_SIZE_MOBILE = 15; // relative size in percentage
-const VISUALIZATION_UPDATE_TIME = 27; // ~37fps
+const MIN_VISUALIZATION_UPDATE_INTERVAL = 25; // 40fps
+const MAX_VISUALIZATION_UPDATE_INTERVAL = 50; // 20fps
+const ANIMATION_CELLS_LIMIT = 50;
 const TRACK_INFO_HEIGHT = 0.8; // relative size compared to main content
 const TRACK_INFO_TRAVEL_TIME = 40000;
 const BTCUSDT_STREAM_NAME = 'btcusdt@aggTrade';
@@ -94,6 +96,8 @@ let long = 103.8666;
 const pageLoadPromise = new Promise((resolve) => {
   window.addEventListener('load', resolve);
 });
+let animationCells = 0;
+let visualizationUpdateInterval = MIN_VISUALIZATION_UPDATE_INTERVAL;
 
 // UTILS
 function square(number) {
@@ -254,6 +258,12 @@ function getStreamNameFromWebSocketMessage(message = '') {
 }
 
 // LOGIC
+function updateVisualizationInterval() {
+  visualizationUpdateInterval = MIN_VISUALIZATION_UPDATE_INTERVAL
+    + (MAX_VISUALIZATION_UPDATE_INTERVAL - MIN_VISUALIZATION_UPDATE_INTERVAL)
+    * Math.min(ANIMATION_CELLS_LIMIT, animationCells) / ANIMATION_CELLS_LIMIT;
+}
+
 function makeCellAnimation(
   row,
   col,
@@ -270,6 +280,8 @@ function makeCellAnimation(
   if (!isCellExisted[row][col] && !triggeredByCode) {
     return;
   }
+  animationCells++;
+  updateVisualizationInterval();
   const cell = cells[row][col];
   clearInterval(intervalIds[row][col]);
   const delta = colorOpacity / CELL_TOUCH_ANIMATION_FPS / CELL_TOUCH_ANIMATION_LENGTH * 1000;
@@ -283,6 +295,8 @@ function makeCellAnimation(
     const opacity = colorOpacity - delta * count;
     cell.style.backgroundColor = `rgba(${color[0]},${color[1]},${color[2]},${opacity})`;
     if (count === CELL_TOUCH_ANIMATION_FPS * CELL_TOUCH_ANIMATION_LENGTH / 1000) {
+      animationCells--;
+      updateVisualizationInterval();
       clearInterval(intervalIds[row][col]);
     }
   }, delay);
@@ -674,10 +688,11 @@ function startMusicVisualization(analyser) {
     trebleCircle.style.transform = `scaleY(${Math.min(1, dBTreble / 140) * 1.25
     })`;
   };
-  const musicVisualizationIntervalID = setInterval(
-    updateVisualization,
-    VISUALIZATION_UPDATE_TIME,
-  );
+  let visualizationLoop = () => {
+    updateVisualization();
+    setTimeout(() => visualizationLoop?.(), visualizationUpdateInterval);
+  };
+  visualizationLoop();
   return () => {
     // reset circles and bars
     bassCircle.style.transform = 'scale(1)';
@@ -687,7 +702,7 @@ function startMusicVisualization(analyser) {
       bar.style.transform = 'scaleX(0)';
     }
     // stop visualization
-    clearInterval(musicVisualizationIntervalID);
+    visualizationLoop = undefined;
   };
 }
 
