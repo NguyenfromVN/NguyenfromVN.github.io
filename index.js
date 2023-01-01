@@ -3,7 +3,7 @@ const CELLS_PER_ROW = 25;
 const CELLS_PER_ROW_MOBILE = 13;
 const PROPAGATION_DELAY = 31;
 const CELL_TOUCH_ANIMATION_LENGTH = 500;
-const CELL_TOUCH_ANIMATION_FPS = 20;
+const CELL_TOUCH_ANIMATION_FPS = 18;
 const DISTANCE_OF_DESTRUCTION = 3;
 const TIME_BETWEEN_DOT_GENERATE = 8000;
 const MIN_DOT_SIZE = 6; // relative size in percentage
@@ -280,10 +280,14 @@ function makeCellAnimation(
   if (!isCellExisted[row][col] && !triggeredByCode) {
     return;
   }
-  animationCells++;
-  updateVisualizationInterval();
+  if (intervalIds[row][col] == null) {
+    animationCells++;
+    updateVisualizationInterval();
+  } else {
+    clearInterval(intervalIds[row][col]);
+    intervalIds[row][col] = null;
+  }
   const cell = cells[row][col];
-  clearInterval(intervalIds[row][col]);
   const delta = colorOpacity / CELL_TOUCH_ANIMATION_FPS / CELL_TOUCH_ANIMATION_LENGTH * 1000;
   let count = 0;
   const delay = 1000 / CELL_TOUCH_ANIMATION_FPS;
@@ -298,6 +302,7 @@ function makeCellAnimation(
       animationCells--;
       updateVisualizationInterval();
       clearInterval(intervalIds[row][col]);
+      intervalIds[row][col] = null;
     }
   }, delay);
   if (triggeredByCode) {
