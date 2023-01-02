@@ -17,9 +17,8 @@ const LOADING_FADE_OUT_TIME = 1000;
 const MIN_LOADING_TIME = 4000;
 const MAIN_CONTENT_SIZE = 20; // relative size in percentage
 const MAIN_CONTENT_SIZE_MOBILE = 15; // relative size in percentage
-const MIN_VISUALIZATION_UPDATE_INTERVAL = 25; // 40fps
+const MIN_VISUALIZATION_UPDATE_INTERVAL = 0; // target to max fps
 const MAX_VISUALIZATION_UPDATE_INTERVAL = 50; // 20fps
-const ANIMATION_CELLS_LIMIT = 50;
 const TRACK_INFO_HEIGHT = 0.8; // relative size compared to main content
 const TRACK_INFO_TRAVEL_TIME = 40000;
 const BTCUSDT_STREAM_NAME = 'btcusdt@aggTrade';
@@ -141,7 +140,7 @@ function isMobileDevice() {
 }
 
 function getTime() {
-  return new Date().getTime();
+  return Date.now();
 }
 
 function sleep(time) {
@@ -259,9 +258,9 @@ function getStreamNameFromWebSocketMessage(message = '') {
 
 // LOGIC
 function updateVisualizationInterval() {
-  visualizationUpdateInterval = MIN_VISUALIZATION_UPDATE_INTERVAL
-    + (MAX_VISUALIZATION_UPDATE_INTERVAL - MIN_VISUALIZATION_UPDATE_INTERVAL)
-    * Math.min(ANIMATION_CELLS_LIMIT, animationCells) / ANIMATION_CELLS_LIMIT;
+  visualizationUpdateInterval = animationCells === 0
+    ? MIN_VISUALIZATION_UPDATE_INTERVAL
+    : MAX_VISUALIZATION_UPDATE_INTERVAL;
 }
 
 function makeCellAnimation(
@@ -528,7 +527,7 @@ function prepareMusic() {
   audioAnalyser = audioCtx.createAnalyser();
   audioAnalyser.minDecibels = -90;
   audioAnalyser.maxDecibels = -10;
-  audioAnalyser.smoothingTimeConstant = 0.85;
+  audioAnalyser.smoothingTimeConstant = 0.935;
   audioAnalyser.fftSize = 64;
   audioSource.connect(gainNode);
   gainNode.connect(audioAnalyser);
