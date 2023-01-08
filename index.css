@@ -656,14 +656,51 @@ body {
 }
 
 #randy-container {
-  font-size: 18px;
+  width: 50px;
+  height: 30px;
   position: absolute;
-  left: 127px;
-  top: 91px;
-  font-family: monospace;
-  background: white;
-  padding: 0px 10px;
-  padding-bottom: 1px;
+  top: 85px;
+  left: 139px;
+}
+
+#randy-container div {
+  position: absolute;
+}
+
+#randy-container .highlight {
+  top: 5px;
+  left: -23px;
+  height: 20px;
+  width: 81px;
+  background-color: #ffa5eb;
+}
+
+#randy-container .letter {
+  top: 0px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  color: white;
+}
+
+#randy-container .r {
+  left: 0px;
+}
+
+#randy-container .a {
+  left: 10px;
+}
+
+#randy-container .n {
+  left: 20px;
+}
+
+#randy-container .d {
+  left: 30px;
+}
+
+#randy-container .y {
+  left: 40px;
 }
 
 #logo-container svg {
