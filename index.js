@@ -4,7 +4,7 @@ const CELLS_PER_ROW_MOBILE = 13;
 const PROPAGATION_DELAY = 31;
 const CELL_TOUCH_ANIMATION_LENGTH = 500;
 const CELL_TOUCH_ANIMATION_FPS = 18;
-const DISTANCE_OF_DESTRUCTION = 3;
+const DISTANCE_OF_DESTRUCTION = 4;
 const TIME_BETWEEN_DOT_GENERATE = 8000;
 const MIN_DOT_SIZE = 6; // relative size in percentage
 const MAX_DOT_SIZE = 8; // relative size in percentage
@@ -267,7 +267,11 @@ function makeCellAnimation(
   row,
   col,
   {
-    distance, triggeredByCode = false, colorOpacity, color = [255, 255, 255],
+    distance = DISTANCE_OF_DESTRUCTION + 1,
+    triggeredByCode = false,
+    colorOpacity = 1,
+    color = [255, 255, 255],
+    isReset = false,
   },
 ) {
   if (row < 0 || row >= rows) {
@@ -279,43 +283,56 @@ function makeCellAnimation(
   if (!isCellExisted[row][col] && !triggeredByCode) {
     return;
   }
-  if (intervalIds[row][col] == null) {
+  isReset &&= !isCellExisted[row][col];
+  const isDestroyed = isCellExisted[row][col]
+    && !triggeredByCode && distance <= DISTANCE_OF_DESTRUCTION;
+  const cell = cells[row][col];
+  const deltaOpacity = colorOpacity / CELL_TOUCH_ANIMATION_FPS / CELL_TOUCH_ANIMATION_LENGTH * 1000;
+  const deltaScale = 1 / CELL_TOUCH_ANIMATION_FPS / CELL_TOUCH_ANIMATION_LENGTH * 1000;
+  const delay = 1000 / CELL_TOUCH_ANIMATION_FPS;
+  const originalScale = 0.9999999999999999; // to avoid overlap between 2 cells
+  let count = 0;
+  function applyStyle(key, value) {
+    cell.style[key] = value;
+  }
+  function updateStyle(backgroundColorOpacity, scale) {
+    applyStyle('backgroundColor', `rgba(${color[0]},${color[1]},${color[2]},${backgroundColorOpacity})`);
+    if (isDestroyed) {
+      applyStyle('transform', `scale(${scale})`);
+    }
+  }
+  if (intervalIds[row][col] === null) {
     animationCells++;
     updateVisualizationInterval();
   } else {
     clearInterval(intervalIds[row][col]);
     intervalIds[row][col] = null;
+    applyStyle('transform', `scale(${originalScale})`);
   }
-  const cell = cells[row][col];
-  const delta = colorOpacity / CELL_TOUCH_ANIMATION_FPS / CELL_TOUCH_ANIMATION_LENGTH * 1000;
-  let count = 0;
-  const delay = 1000 / CELL_TOUCH_ANIMATION_FPS;
   // first frame
-  cell.style.backgroundColor = `rgba(${color[0]},${color[1]},${color[2]},${colorOpacity})`;
+  updateStyle(colorOpacity, originalScale);
   // the rest of the frames
   intervalIds[row][col] = setInterval(() => {
     count++;
-    const opacity = colorOpacity - delta * count;
-    cell.style.backgroundColor = `rgba(${color[0]},${color[1]},${color[2]},${opacity})`;
-    if (count === CELL_TOUCH_ANIMATION_FPS * CELL_TOUCH_ANIMATION_LENGTH / 1000) {
+    const isLastFrame = count === CELL_TOUCH_ANIMATION_FPS * CELL_TOUCH_ANIMATION_LENGTH / 1000;
+    const opacity = colorOpacity - deltaOpacity * count * (!isDestroyed || isLastFrame ? 1 : 0.9);
+    const scale = !isDestroyed || isLastFrame
+      ? originalScale : originalScale - deltaScale * count ** 4
+      / ((CELL_TOUCH_ANIMATION_FPS / 1000 * CELL_TOUCH_ANIMATION_LENGTH) ** 3);
+    updateStyle(opacity, scale);
+    if (isLastFrame) {
       animationCells--;
       updateVisualizationInterval();
       clearInterval(intervalIds[row][col]);
       intervalIds[row][col] = null;
     }
   }, delay);
-  if (triggeredByCode) {
-    return;
-  }
-  // destroy this cell after the animation is done if it is inside the area of destruction
-  if (distance <= DISTANCE_OF_DESTRUCTION) {
-    setTimeout(() => {
-      if (!isCellExisted[row][col]) {
-        return;
-      }
-      cells[row][col].style.zIndex = '0';
-      isCellExisted[row][col] = false;
-    }, CELL_TOUCH_ANIMATION_LENGTH);
+  if (isReset) {
+    applyStyle('zIndex', '3');
+    isCellExisted[row][col] = true;
+  } else if (isDestroyed) {
+    applyStyle('zIndex', '0');
+    isCellExisted[row][col] = false;
   }
 }
 
@@ -463,11 +480,13 @@ function onCellTouch(
   triggeredByCode = false,
   colorOpacity = 0.4,
   color = [255, 255, 255],
+  isReset = false,
 ) {
   const options = {
     triggeredByCode,
     colorOpacity,
     color,
+    isReset,
   };
   makeCellAnimation(row, col, { distance: 0, ...options });
   // wave effect, similar to how bfs works
@@ -689,8 +708,7 @@ function startMusicVisualization(analyser) {
     const dBBass = dataArray[0];
     const dBTreble = dataArray[6];
     bassCircle.style.transform = `scaleX(${Math.min(1, dBBass / 230) * 1.25})`;
-    trebleCircle.style.transform = `scaleY(${Math.min(1, dBTreble / 140) * 1.25
-    })`;
+    trebleCircle.style.transform = `scaleY(${Math.min(1, dBTreble / 140) * 1.25})`;
   };
   let visualizationLoop = () => {
     updateVisualization();
@@ -761,41 +779,28 @@ function createGridSystem(appWidth, appHeight) {
   AppContainer.style.gridTemplateRows = createFrString(rows);
   for (let i = 0; i < rows; i++) {
     const cellsInRow = [];
-    const boolArray = [];
-    const nullArray = [];
     for (let j = 0; j < cols; j++) {
       const cell = document.createElement('div');
       cell.className = 'cell';
       addUniversalSensitiveClickListener(cell, () => onCellTouch(i, j));
       AppContainer.append(cell);
       cellsInRow.push(cell);
-      boolArray.push(true);
-      nullArray.push(null);
     }
     cells.push(cellsInRow);
-    isCellExisted.push(boolArray);
-    intervalIds.push(nullArray);
+    isCellExisted.push(Array(cols).fill(true));
+    intervalIds.push(Array(cols).fill(null));
   }
 }
 
 function resetGrid() {
-  onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true, 0.5, [255, 0, 255]);
-  setTimeout(() => {
-    for (let i = 0; i < rows; i++) {
-      for (let j = 0; j < cols; j++) {
-        cells[i][j].style.zIndex = '3';
-        isCellExisted[i][j] = true;
-      }
-    }
-  }, 1013);
+  onCellTouch(Math.floor(rows / 2), Math.floor(cols / 2), true, 0.5, [255, 0, 255], true);
 }
 
 function showMainPanel(mainContainerSizeAfterScaling) {
   // styling for the main panel according to the screen size
   const mainContainer = document.getElementById('main');
   const mainContainerSize = mainContainer.offsetWidth;
-  mainContainer.style.transform = `scale(${mainContainerSizeAfterScaling / mainContainerSize
-  })`;
+  mainContainer.style.transform = `scale(${mainContainerSizeAfterScaling / mainContainerSize})`;
   // show the main panel
   mainContainer.style.opacity = '1';
   window.cid += 'y-nguye';
@@ -832,9 +837,7 @@ function showMiniLogo() {
   // animation for hobbies
   const hobbiesDiv = document.querySelectorAll('#mini-logo .hobbies div');
   for (let i = 0; i < hobbiesDiv.length; i++) {
-    hobbiesDiv[i].style.animation = `hobbiesAnimation ${(hobbiesAnimationLength - translateAnimationLength) * hobbiesDiv.length
-    }s ${(hobbiesAnimationLength - translateAnimationLength) * i
-    }s linear infinite`;
+    hobbiesDiv[i].style.animation = `hobbiesAnimation ${(hobbiesAnimationLength - translateAnimationLength) * hobbiesDiv.length}s ${(hobbiesAnimationLength - translateAnimationLength) * i}s linear infinite`;
   }
   // show mini logo
   const miniLogoContainer = document.getElementById('mini-logo');
