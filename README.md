@@ -6,7 +6,7 @@ Live at https://nguyenfromvn.github.io/
 
 ## Highlights:
 - A music radio that can play music **uninterruptedly**, even when the network is slow or losing connection, or even if the screen is **off** or the device is **locked** (Android devices)
-- Well performance optimizations including **fps lock**, using **custom code** instead of JavaScript builtin functions, **precise timing** for heavy tasks, using the **Performance tab** of Dev tools, etc. resulting in a very smooth experience with high framerate, even on mobile devices
+- Well performance optimizations including **dynamic fps limit**, using **custom code** instead of JavaScript builtin functions, **precise timing** for heavy tasks, using the **Performance tab** of Dev tools, etc. resulting in a very smooth experience with high framerate, even on mobile devices
 - **Fault tolerance** crypto price tracking widget that can recover to work properly after an interruption event (caused by networking issues, etc.)
 - **Precise** time info from the clock widget, it matches the system's time in **seconds**
 - **No framework or library** involved, everything is written from scratch

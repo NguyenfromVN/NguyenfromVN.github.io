@@ -718,26 +718,39 @@ body {
   display: flex;
   align-items: center;
   color: white;
+  opacity: 0;
+  animation: letter-fade-in 0.14s linear forwards;
 }
 
 #randy-container .r {
   left: 0px;
+  animation-delay: 2.53s;
 }
 
 #randy-container .a {
   left: 10px;
+  animation-delay: 2.67s;
 }
 
 #randy-container .n {
   left: 20px;
+  animation-delay: 2.82s;
 }
 
 #randy-container .d {
   left: 30px;
+  animation-delay: 2.96s;
 }
 
 #randy-container .y {
   left: 40px;
+  animation-delay: 3.15s;
+}
+
+@keyframes letter-fade-in {
+  100% {
+    opacity: 1;
+  }
 }
 
 #logo-container svg {

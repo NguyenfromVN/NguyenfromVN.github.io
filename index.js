@@ -97,6 +97,9 @@ const pageLoadPromise = new Promise((resolve) => {
 });
 let animationCells = 0;
 let visualizationUpdateInterval = MIN_VISUALIZATION_UPDATE_INTERVAL;
+// pre-calculate scaling values to reduce resources later
+const destroyedCellAnimationScale = Array(DISTANCE_OF_DESTRUCTION + 1).fill(null).map(() => []);
+let cellAnimationFrames = 0;
 
 // UTILS
 function square(number) {
@@ -263,6 +266,13 @@ function updateVisualizationInterval() {
     : MAX_VISUALIZATION_UPDATE_INTERVAL;
 }
 
+function getCellAnimationScale(frame, isDestroyed, distance) {
+  if (!isDestroyed) {
+    return 1;
+  }
+  return destroyedCellAnimationScale[distance][frame];
+}
+
 function makeCellAnimation(
   row,
   col,
@@ -287,18 +297,13 @@ function makeCellAnimation(
   const isDestroyed = isCellExisted[row][col]
     && !triggeredByCode && distance <= DISTANCE_OF_DESTRUCTION;
   const cell = cells[row][col];
-  const deltaOpacity = colorOpacity / CELL_TOUCH_ANIMATION_FPS / CELL_TOUCH_ANIMATION_LENGTH * 1000;
-  const deltaScale = 1 / CELL_TOUCH_ANIMATION_FPS / CELL_TOUCH_ANIMATION_LENGTH * 1000;
+  const deltaOpacity = colorOpacity / cellAnimationFrames;
   const delay = 1000 / CELL_TOUCH_ANIMATION_FPS;
-  const originalScale = 0.9999999999999999; // to avoid overlap between 2 cells
   let count = 0;
-  function applyStyle(key, value) {
-    cell.style[key] = value;
-  }
   function updateStyle(backgroundColorOpacity, scale) {
-    applyStyle('backgroundColor', `rgba(${color[0]},${color[1]},${color[2]},${backgroundColorOpacity})`);
+    cell.style.backgroundColor = `rgba(${color[0]},${color[1]},${color[2]},${backgroundColorOpacity})`;
     if (isDestroyed) {
-      applyStyle('transform', `scale(${scale})`);
+      cell.style.transform = count === 0 || count === cellAnimationFrames ? '' : `scale(${scale})`;
     }
   }
   if (intervalIds[row][col] === null) {
@@ -307,20 +312,16 @@ function makeCellAnimation(
   } else {
     clearInterval(intervalIds[row][col]);
     intervalIds[row][col] = null;
-    applyStyle('transform', `scale(${originalScale})`);
+    cell.style.transform = '';
   }
   // first frame
-  updateStyle(colorOpacity, originalScale);
+  updateStyle(colorOpacity, 1);
   // the rest of the frames
   intervalIds[row][col] = setInterval(() => {
     count++;
-    const isLastFrame = count === CELL_TOUCH_ANIMATION_FPS * CELL_TOUCH_ANIMATION_LENGTH / 1000;
-    const opacity = colorOpacity - deltaOpacity * count * (!isDestroyed || isLastFrame ? 1 : 0.9);
-    const scale = !isDestroyed || isLastFrame
-      ? originalScale : originalScale - deltaScale * count ** 4
-      / ((CELL_TOUCH_ANIMATION_FPS / 1000 * CELL_TOUCH_ANIMATION_LENGTH) ** 3);
-    updateStyle(opacity, scale);
-    if (isLastFrame) {
+    const opacity = colorOpacity - deltaOpacity * count;
+    updateStyle(opacity, getCellAnimationScale(count, isDestroyed, distance));
+    if (count === cellAnimationFrames) {
       animationCells--;
       updateVisualizationInterval();
       clearInterval(intervalIds[row][col]);
@@ -328,10 +329,10 @@ function makeCellAnimation(
     }
   }, delay);
   if (isReset) {
-    applyStyle('zIndex', '3');
+    cell.style.zIndex = '3';
     isCellExisted[row][col] = true;
   } else if (isDestroyed) {
-    applyStyle('zIndex', '0');
+    cell.style.zIndex = '0';
     isCellExisted[row][col] = false;
   }
 }
@@ -381,7 +382,8 @@ function startSignatureNeonEffect() {
       });
     }
     makeFlickeringEffect([
-      103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 103, 1409, 127, 1409, 127, 1801,
+      137, 137, 137, 137, 137, 137, 137, 137, 137, 137, 137, 137,
+      137, 137, 137, 137, 137, 137, 1409, 181, 1409, 181, 1801,
     ]);
   }
   makeEffect();
@@ -560,6 +562,9 @@ function prepareMusic() {
       title: 'Randy\'s music radio',
       artist: 'Tap to go to the radio',
       album: 'Tap to go to the radio',
+      artwork: [
+        { src: './images/vinyl.png', sizes: '200x200', type: 'image/png' },
+      ],
     });
   }
   function reloadOnVisiblePause() {
@@ -770,7 +775,21 @@ async function startMusic(track) {
   };
 }
 
+function prepareCellAnimation() {
+  cellAnimationFrames = CELL_TOUCH_ANIMATION_FPS * CELL_TOUCH_ANIMATION_LENGTH / 1000;
+  const deltaScale = 1 / cellAnimationFrames;
+  const originalScale = 0.98; // to avoid overlap between 2 cells
+  for (let frame = 0; frame <= cellAnimationFrames; frame++) {
+    for (let distance = 0; distance <= DISTANCE_OF_DESTRUCTION; distance++) {
+      const x = frame + (DISTANCE_OF_DESTRUCTION - distance) * 1.5;
+      const scale = Math.max(originalScale - deltaScale * x ** 2 / cellAnimationFrames * 0.5, 0);
+      destroyedCellAnimationScale[distance][frame] = scale;
+    }
+  }
+}
+
 function createGridSystem(appWidth, appHeight) {
+  prepareCellAnimation();
   cols = isMobileDevice() ? CELLS_PER_ROW_MOBILE : CELLS_PER_ROW;
   const cellSize = appWidth / cols;
   rows = roundToOddNumber(appHeight / cellSize);
