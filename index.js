@@ -531,7 +531,10 @@ const loadTrack = (index) => new Promise((resolve) => {
 });
 
 async function loadFirstTrack() {
-  tracks = getDataFromClass('tracks-info');
+  const data = getDataFromClass('tracks-info');
+  const { url } = data;
+  tracks = data.tracks;
+  tracks.forEach((track) => { track.path = url + track.path; });
   shuffleArray(tracks);
   await loadTrack(0);
   currentTrackIndex = 0;
