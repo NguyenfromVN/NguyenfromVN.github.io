@@ -536,6 +536,13 @@ async function loadFirstTrack() {
   tracks = data.tracks;
   tracks.forEach((track) => { track.path = url + track.path; });
   shuffleArray(tracks);
+  const demoMode = document.location.href.indexOf('demo=true') !== -1;
+  if (demoMode) {
+    const trackIndex = tracks.findIndex(({ name }) => name === 'Feel Good');
+    const tmp = tracks[0];
+    tracks[0] = tracks[trackIndex];
+    tracks[trackIndex] = tmp;
+  }
   await loadTrack(0);
   currentTrackIndex = 0;
 }
@@ -551,7 +558,7 @@ function prepareMusic() {
   audioAnalyser = audioCtx.createAnalyser();
   audioAnalyser.minDecibels = -90;
   audioAnalyser.maxDecibels = -10;
-  audioAnalyser.smoothingTimeConstant = 0.87;
+  audioAnalyser.smoothingTimeConstant = 0.88;
   audioAnalyser.fftSize = 64;
   audioSource.connect(gainNode);
   gainNode.connect(audioAnalyser);
@@ -715,8 +722,8 @@ function startMusicVisualization(analyser) {
     }
     const dBBass = dataArray[0];
     const dBTreble = dataArray[6];
-    bassCircle.style.transform = `scaleX(${Math.min(1, dBBass / 230) * 1.25})`;
-    trebleCircle.style.transform = `scaleY(${Math.min(1, dBTreble / 140) * 1.25})`;
+    bassCircle.style.transform = `scaleX(${Math.min(1, Math.max(0, (dBBass - 90) / 140)) * 1.25})`;
+    trebleCircle.style.transform = `scaleY(${Math.min(1, Math.max(0, (dBTreble - 40) / 100)) * 1.25})`;
   };
   let visualizationLoop = () => {
     updateVisualization();
