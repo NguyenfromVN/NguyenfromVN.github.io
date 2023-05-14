@@ -5,6 +5,9 @@ This is my first side project since I started my professional career on Septembe
 Live at https://nguyenfromvn.github.io/
 
 ## Highlights:
+
+<img width="100%" alt="PageSpeed results" title="PageSpeed results" src="https://github.com/NguyenfromVN/NguyenfromVN.github.io/assets/57567458/2565067f-cd36-49b0-acc2-484d09637816">
+
 - A music radio that can play music **uninterruptedly**, even when the network is slow or losing connection, or even if the screen is **off** or the device is **locked** (Android devices)
 - Well performance optimizations including **dynamic fps limit**, using **custom code** instead of JavaScript builtin functions, **precise timing** for heavy tasks, using the **Performance tab** of Dev tools, etc. resulting in a very smooth experience with high framerate, even on mobile devices
 - **Fault tolerance** crypto price tracking widget that can recover to work properly after an interruption event (caused by networking issues, etc.)
