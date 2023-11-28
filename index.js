@@ -848,8 +848,8 @@ function showMainPanel(mainContainerSizeAfterScaling) {
   // make mask fade after signature's animation is done
   const mask = document.getElementById('mask');
   mask.classList.add('faded-effect');
-  // remove mask after 3s from starting time, to avoid heavy load
-  setTimeout(() => mask.remove(), 11000);
+  // remove mask after 1.5s from starting time, to avoid heavy load
+  setTimeout(() => mask.remove(), 9500);
   // styling for bars
   for (let i = 0; i < visualizationBars.length; i++) {
     const bar = visualizationBars[i];
