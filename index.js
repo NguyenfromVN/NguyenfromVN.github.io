@@ -100,6 +100,25 @@ let visualizationUpdateInterval = MIN_VISUALIZATION_UPDATE_INTERVAL;
 // pre-calculate scaling values to reduce resources later
 const destroyedCellAnimationScale = Array(DISTANCE_OF_DESTRUCTION + 1).fill(null).map(() => []);
 let cellAnimationFrames = 0;
+const dotGameLinks = [
+  {
+    imgSrc: 'github',
+    linkElement: document.getElementById('a-github'),
+  },
+  {
+    imgSrc: 'gmail',
+    linkElement: document.getElementById('a-gmail'),
+  },
+  {
+    imgSrc: 'linkedin',
+    linkElement: document.getElementById('a-linkedin'),
+  },
+  {
+    imgSrc: 'whatsapp',
+    linkElement: document.getElementById('a-whatsapp'),
+  },
+];
+let decoPatternUrl = 'deco';
 
 // UTILS
 function square(number) {
@@ -417,24 +436,6 @@ function topCellsEffect() {
 }
 
 function startDotGame() {
-  const links = [
-    {
-      imgSrc: './images/github.png',
-      linkElement: document.getElementById('a-github'),
-    },
-    {
-      imgSrc: './images/gmail.png',
-      linkElement: document.getElementById('a-gmail'),
-    },
-    {
-      imgSrc: './images/linkedin.png',
-      linkElement: document.getElementById('a-linkedin'),
-    },
-    {
-      imgSrc: './images/whatsapp.png',
-      linkElement: document.getElementById('a-whatsapp'),
-    },
-  ];
   let currentIndex = -1;
   setInterval(() => {
     // skip generating when the tab is out of focus
@@ -456,8 +457,8 @@ function startDotGame() {
       dotSize,
       top,
       left,
-      hasLink && links[(currentIndex / 2) % links.length].imgSrc,
-      hasLink && links[(currentIndex / 2) % links.length].linkElement,
+      hasLink && dotGameLinks[(currentIndex / 2) % dotGameLinks.length].imgSrc,
+      hasLink && dotGameLinks[(currentIndex / 2) % dotGameLinks.length].linkElement,
     );
     addUniversalSensitiveClickListener(dot, () => {
       dot.remove();
@@ -508,27 +509,48 @@ function onCellTouch(
   }
 }
 
-const loadTrack = (index) => new Promise((resolve) => {
-  const { path, name, artist } = tracks[index];
+const getResourceBlobURL = (url) => new Promise((resolve) => {
   const ajaxRequest = new XMLHttpRequest();
-  ajaxRequest.open('GET', path, true);
+  ajaxRequest.open('GET', url, true);
   ajaxRequest.responseType = 'blob';
   ajaxRequest.onload = () => {
     const blobData = ajaxRequest.response;
-    const nextTrackIndex = (currentTrackIndex + 1) % tracks.length;
-    if (index !== nextTrackIndex || trackData !== null) {
-      return;
-    }
-    trackData = {
-      path,
-      name,
-      artist,
-      audioUrl: URL.createObjectURL(blobData),
-    };
-    resolve();
+    const blobUrl = URL.createObjectURL(blobData);
+    resolve(blobUrl);
   };
   ajaxRequest.send();
 });
+
+async function setUpStaticResources() {
+  const promises = [];
+  [...dotGameLinks, { imgSrc: 'deco' }].forEach(async (item) => {
+    const promise = getResourceBlobURL(`./images/${item.imgSrc}.png`);
+    promises.push(promise);
+    const blobUrl = await promise;
+    const imgTag = document.querySelector(`.for-preloading-purpose-${item.imgSrc}`);
+    imgTag.src = blobUrl;
+    if (item.imgSrc === 'deco') {
+      decoPatternUrl = blobUrl;
+    }
+    item.imgSrc = blobUrl;
+  });
+  return Promise.all(promises);
+}
+
+async function loadTrack(index) {
+  const { path, name, artist } = tracks[index];
+  const audioUrl = await getResourceBlobURL(path);
+  const nextTrackIndex = (currentTrackIndex + 1) % tracks.length;
+  if (index !== nextTrackIndex || trackData !== null) {
+    return;
+  }
+  trackData = {
+    path,
+    name,
+    artist,
+    audioUrl,
+  };
+}
 
 async function loadFirstTrack() {
   const data = getDataFromClass('tracks-info');
@@ -618,7 +640,7 @@ function addSpanToTrackInfo(content, fontSize, trackInfoContainer) {
   // deco pattern
   const decoPattern = document.createElement('img');
   const padding = span.offsetHeight / 8;
-  decoPattern.src = './images/deco.png';
+  decoPattern.src = decoPatternUrl;
   decoPattern.style.height = `${span.offsetHeight}px`;
   decoPattern.style.marginLeft = `${padding}px`;
   decoPattern.style.marginRight = `${padding}px`;
@@ -1201,6 +1223,7 @@ async function init() {
   const appWidth = AppContainer.offsetWidth;
   const appHeight = AppContainer.offsetHeight;
   const startTime = getTime();
+  const setUpPromise = setUpStaticResources();
   createGridSystem(appWidth, appHeight);
   startCryptoPriceTracking();
   startClock();
@@ -1210,7 +1233,7 @@ async function init() {
   if (currentTime - startTime < MIN_LOADING_TIME) {
     await sleep(MIN_LOADING_TIME - (currentTime - startTime));
   }
-  await pageLoadPromise;
+  await Promise.all([pageLoadPromise, setUpPromise]);
   // show alert
   const alertText = document.getElementById('start-alert');
   alertText.style.opacity = '1';
