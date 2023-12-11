@@ -118,7 +118,7 @@ const dotGameLinks = [
     linkElement: document.getElementById('a-whatsapp'),
   },
 ];
-let decoPatternUrl = 'deco';
+let decoPatternUrl = '';
 
 // UTILS
 function square(number) {
@@ -523,14 +523,24 @@ const getResourceBlobURL = (url) => new Promise((resolve) => {
 
 async function setUpStaticResources() {
   const promises = [];
-  [...dotGameLinks, { imgSrc: 'deco' }].forEach(async (item) => {
-    const promise = getResourceBlobURL(`./images/${item.imgSrc}.png`);
+  [...dotGameLinks.map((item) => {
+    item.type = 'png';
+    return item;
+  }),
+  { imgSrc: 'deco', type: 'png' },
+  { imgSrc: 'neon-background', type: 'webm' }].forEach(async (item) => {
+    const promise = getResourceBlobURL(`./images/${item.imgSrc}.${item.type}`);
     promises.push(promise);
     const blobUrl = await promise;
-    const imgTag = document.querySelector(`.for-preloading-purpose-${item.imgSrc}`);
-    imgTag.src = blobUrl;
+    const element = document.querySelector(`.for-preloading-purpose-${item.imgSrc}`) || {};
+    element.src = blobUrl;
     if (item.imgSrc === 'deco') {
       decoPatternUrl = blobUrl;
+    }
+    if (item.imgSrc === 'neon-background') {
+      const videoElement = document.getElementById('background-image');
+      videoElement.src = blobUrl;
+      videoElement.play();
     }
     item.imgSrc = blobUrl;
   });
@@ -1218,6 +1228,35 @@ function startClock() {
   tick();
 }
 
+function setUpBackground() {
+  const element = document.getElementById('background-image');
+  element.play();
+  element.style.top = '0px';
+  element.style.left = '0px';
+  const backgroundWidth = element.offsetWidth;
+  const backgroundHeight = element.offsetHeight;
+  const backgroundRatio = backgroundWidth / backgroundHeight;
+  const appWidth = AppContainer.offsetWidth;
+  const appHeight = AppContainer.offsetHeight;
+  const appRatio = AppContainer.offsetWidth / AppContainer.offsetHeight;
+  if (backgroundRatio === appRatio) {
+    element.style.width = appWidth;
+    element.style.height = appHeight;
+  } else {
+    const scaleRatio = backgroundRatio < appRatio
+      ? appWidth / backgroundWidth : appHeight / backgroundHeight;
+    const newWidth = backgroundWidth * scaleRatio;
+    const newHeight = backgroundHeight * scaleRatio;
+    element.style.width = `${newWidth}px`;
+    element.style.height = `${newHeight}px`;
+    if (backgroundRatio < appRatio) {
+      element.style.top = `${(appHeight - newHeight) / 2}px`;
+    } else {
+      element.style.left = `${(appWidth - newWidth) / 2}px`;
+    }
+  }
+}
+
 // INIT FUNCTION
 async function init() {
   const appWidth = AppContainer.offsetWidth;
@@ -1240,6 +1279,7 @@ async function init() {
   alertText.style.transition = 'opacity 0.5s';
   const loadingScreen = document.getElementById('loading');
   loadingScreen.addEventListener('click', async () => {
+    setUpBackground();
     prepareMusic();
     await requireGeoInfo();
     startWeatherWidget();

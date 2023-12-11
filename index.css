@@ -8,6 +8,7 @@ html,
 body {
   height: 100%;
   overflow: hidden;
+  position: relative;
 }
 
 .no-display {
@@ -15,11 +16,9 @@ body {
 }
 
 /* BACKGROUND */
-body {
-  background-image: url("./images/neon-background.gif#randy");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover;
+#background-image {
+  position: absolute;
+  z-index: -1;
 }
 
 /* MASK */
