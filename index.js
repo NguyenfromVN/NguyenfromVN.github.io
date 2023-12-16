@@ -540,7 +540,6 @@ async function setUpStaticResources() {
     if (item.imgSrc === 'neon-background') {
       const videoElement = document.getElementById('background-image');
       videoElement.src = blobUrl;
-      videoElement.play();
     }
     item.imgSrc = blobUrl;
   });
@@ -1222,15 +1221,26 @@ function startClock() {
     const time = dateObj.getTime();
     const nextTime = Math.floor((time + 1000) / 1000) * 1000;
     const delay = nextTime - time;
-    updateTime(dateObj);
     setTimeout(tick, delay);
+    updateTime(dateObj);
   }
   tick();
 }
 
-function setUpBackground() {
+async function setUpBackground() {
   const element = document.getElementById('background-image');
   element.play();
+  const getVideoReady = new Promise((resolve) => {
+    function check() {
+      const videoHeight = element.offsetHeight;
+      if (videoHeight > 200) {
+        return resolve();
+      }
+      return setTimeout(check);
+    }
+    check();
+  });
+  await getVideoReady;
   element.style.top = '0px';
   element.style.left = '0px';
   const backgroundWidth = element.offsetWidth;
@@ -1279,7 +1289,7 @@ async function init() {
   alertText.style.transition = 'opacity 0.5s';
   const loadingScreen = document.getElementById('loading');
   loadingScreen.addEventListener('click', async () => {
-    setUpBackground();
+    await setUpBackground();
     prepareMusic();
     await requireGeoInfo();
     startWeatherWidget();
