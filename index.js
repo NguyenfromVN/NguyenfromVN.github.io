@@ -1267,8 +1267,20 @@ async function setUpBackground() {
   }
 }
 
+function prepareFonts() {
+  const headElement = document.querySelector('head');
+  const fonts = ['Playfair+Display+SC', 'Permanent+Marker'];
+  fonts.forEach((font) => {
+    const linkElement = document.createElement('link');
+    linkElement.rel = 'stylesheet';
+    linkElement.href = `https://fonts.googleapis.com/css2?family=${font}`;
+    headElement.appendChild(linkElement);
+  });
+}
+
 // INIT FUNCTION
 async function init() {
+  prepareFonts();
   const appWidth = AppContainer.offsetWidth;
   const appHeight = AppContainer.offsetHeight;
   const startTime = getTime();
