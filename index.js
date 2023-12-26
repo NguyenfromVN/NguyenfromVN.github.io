@@ -522,13 +522,15 @@ const getResourceBlobURL = (url) => new Promise((resolve) => {
 });
 
 async function setUpStaticResources() {
+  const widgetIcons = ['bitcoin', 'clock', 'ethereum', 'weather'];
   const promises = [];
   [...dotGameLinks.map((item) => {
     item.type = 'png';
     return item;
   }),
   { imgSrc: 'deco', type: 'png' },
-  { imgSrc: 'neon-background', type: 'webm' }].forEach(async (item) => {
+  { imgSrc: 'neon-background', type: 'webm' },
+  ...widgetIcons.map((imgSrc) => ({ imgSrc, type: 'png' }))].forEach(async (item) => {
     const promise = getResourceBlobURL(`./images/${item.imgSrc}.${item.type}`);
     promises.push(promise);
     const blobUrl = await promise;
@@ -540,6 +542,10 @@ async function setUpStaticResources() {
     if (item.imgSrc === 'neon-background') {
       const videoElement = document.getElementById('background-image');
       videoElement.src = blobUrl;
+    }
+    if (widgetIcons.find((widgetIcon) => widgetIcon === item.imgSrc)) {
+      const widgetIconElement = document.querySelector(`.${item.imgSrc}-icon`);
+      widgetIconElement.src = blobUrl;
     }
     item.imgSrc = blobUrl;
   });
