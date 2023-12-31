@@ -1279,7 +1279,7 @@ function prepareFonts() {
   fonts.forEach((font) => {
     const linkElement = document.createElement('link');
     linkElement.rel = 'stylesheet';
-    linkElement.href = `https://fonts.googleapis.com/css2?family=${font}`;
+    linkElement.href = `https://fonts.googleapis.com/css2?family=${font}&display=swap`;
     headElement.appendChild(linkElement);
   });
 }
