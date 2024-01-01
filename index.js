@@ -524,13 +524,15 @@ const getResourceBlobURL = (url) => new Promise((resolve) => {
 async function setUpStaticResources() {
   const widgetIcons = ['bitcoin', 'clock', 'ethereum', 'weather'];
   const promises = [];
-  [...dotGameLinks.map((item) => {
-    item.type = 'png';
-    return item;
-  }),
-  { imgSrc: 'deco', type: 'png' },
-  { imgSrc: 'neon-background', type: 'webm' },
-  ...widgetIcons.map((imgSrc) => ({ imgSrc, type: 'png' }))].forEach(async (item) => {
+  [
+    { imgSrc: 'neon-background', type: 'webm' },
+    { imgSrc: 'deco', type: 'png' },
+    ...widgetIcons.map((imgSrc) => ({ imgSrc, type: 'png' })),
+    ...dotGameLinks.map((item) => {
+      item.type = 'png';
+      return item;
+    }),
+  ].forEach(async (item) => {
     const promise = getResourceBlobURL(`./images/${item.imgSrc}.${item.type}`);
     promises.push(promise);
     const blobUrl = await promise;
@@ -1275,42 +1277,58 @@ async function setUpBackground() {
 
 function prepareFonts() {
   const headElement = document.querySelector('head');
-  const fonts = ['Playfair+Display+SC', 'Permanent+Marker'];
-  fonts.forEach((font) => {
-    const linkElement = document.createElement('link');
-    linkElement.rel = 'stylesheet';
-    linkElement.href = `https://fonts.googleapis.com/css2?family=${font}&display=swap`;
-    headElement.appendChild(linkElement);
+  const fonts = [
+    {
+      family: 'Playfair Display SC',
+      url: './fonts/ke85OhoaMkR6-hSn7kbHVoFf7ZfgMPr_lbkMEA.woff2',
+    },
+    {
+      family: 'Permanent Marker',
+      url: './fonts/Fh4uPib9Iyv2ucM6pGQMWimMp004La2Cfw.woff2',
+    },
+  ];
+  fonts.forEach(({ family, url }) => {
+    const styleElement = document.createElement('style');
+    styleElement.innerHTML = `
+    @font-face {
+      font-family: ${family};
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url(${url}) format('woff2');
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+    `;
+    headElement.appendChild(styleElement);
   });
 }
 
 // INIT FUNCTION
 async function init() {
+  const prepareTrackPromise = loadFirstTrack();
+  const setUpPromise = setUpStaticResources();
   prepareFonts();
   const appWidth = AppContainer.offsetWidth;
   const appHeight = AppContainer.offsetHeight;
   const startTime = getTime();
-  const setUpPromise = setUpStaticResources();
   createGridSystem(appWidth, appHeight);
-  startCryptoPriceTracking();
   startClock();
-  await loadFirstTrack();
   // wait more if loading time is way too fast
   const currentTime = getTime();
   if (currentTime - startTime < MIN_LOADING_TIME) {
     await sleep(MIN_LOADING_TIME - (currentTime - startTime));
   }
-  await Promise.all([pageLoadPromise, setUpPromise]);
+  await Promise.all([pageLoadPromise, setUpPromise, prepareTrackPromise]);
   // show alert
   const alertText = document.getElementById('start-alert');
   alertText.style.opacity = '1';
   alertText.style.transition = 'opacity 0.5s';
   const loadingScreen = document.getElementById('loading');
   loadingScreen.addEventListener('click', async () => {
-    await setUpBackground();
     prepareMusic();
-    await requireGeoInfo();
+    await Promise.all([requireGeoInfo(), setUpBackground()]);
     startWeatherWidget();
+    startCryptoPriceTracking();
     const mainContainerSizeAfterScaling = (appHeight
       * (isMobileDevice() ? MAIN_CONTENT_SIZE_MOBILE : MAIN_CONTENT_SIZE))
       / 100;
